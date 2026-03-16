@@ -5,28 +5,28 @@
 <title>عالم بصمة الذكاء</title>
 
 <style>
-
 body{
 direction:rtl;
 font-family:Tahoma;
 margin:0;
-text-align:center;
+background:#020f18;
 color:white;
-background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+text-align:center;
 }
 
-/* خلفية الذكاء */
+/* خلفية عالم الذكاء */
 
-.ai{
+body:before{
+content:"";
 position:fixed;
 top:0;
 left:0;
 width:100%;
 height:100%;
 background:
-radial-gradient(circle at 30% 40%,#00e5ff22,transparent),
-radial-gradient(circle at 70% 60%,#00e5ff22,transparent);
-animation:move 8s infinite alternate;
+radial-gradient(circle at 30% 40%,#00e5ff33,transparent),
+radial-gradient(circle at 70% 60%,#00e5ff33,transparent);
+animation:move 10s infinite alternate;
 z-index:-1;
 }
 
@@ -36,7 +36,7 @@ z-index:-1;
 }
 
 header{
-font-size:32px;
+font-size:34px;
 padding:20px;
 text-shadow:0 0 20px #00e5ff;
 }
@@ -47,33 +47,8 @@ margin:20px auto;
 width:90%;
 max-width:900px;
 padding:20px;
-border-radius:12px;
-box-shadow:0 0 20px #00e5ff44;
+border-radius:10px;
 }
-
-/* أزرار الإجابة */
-
-.choice{
-width:120px;
-height:120px;
-border-radius:50%;
-display:inline-flex;
-align-items:center;
-justify-content:center;
-font-size:18px;
-margin:15px;
-cursor:pointer;
-transition:.3s;
-}
-
-.choice:hover{
-transform:scale(1.2);
-}
-
-.a{background:#ffc107}
-.b{background:#00c853}
-.c{background:#ff1744}
-.d{background:#2979ff}
 
 input{
 padding:8px;
@@ -83,55 +58,85 @@ border:none;
 }
 
 button{
-padding:10px 15px;
+padding:8px 14px;
 border:none;
-border-radius:8px;
+border-radius:6px;
 background:#00e5ff;
+cursor:pointer;
+}
+
+.choice{
+background:#00c853;
+margin:10px;
+padding:15px;
+border-radius:10px;
 cursor:pointer;
 }
 
 table{
 width:100%;
-border-collapse:collapse;
 margin-top:10px;
 }
 
 td,th{
-border:1px solid #00e5ff;
 padding:8px;
+border-bottom:1px solid #00e5ff;
 }
-
 </style>
 </head>
 
 <body>
 
-<div class="ai"></div>
-
 <header>🧠 عالم بصمة الذكاء</header>
 
-<audio autoplay>
-<source src="https://assets.mixkit.co/sfx/preview/mixkit-game-level-completed-2059.mp3">
-</audio>
+<div class="box">
+<h3>البيانات الأساسية</h3>
+<input placeholder="المدرسة">
+<input placeholder="المديرة">
+<input placeholder="المعلمة">
+<input placeholder="المادة">
+<input placeholder="الصف">
+<input placeholder="عنوان الدرس">
+</div>
 
 <div class="box">
+<h3>الفرق</h3>
 
-<h3>إضافة مجموعة</h3>
-
-<input id="teamName" placeholder="اسم المجموعة">
+<input id="teamName" placeholder="اسم الفريق">
 <button onclick="addTeam()">إضافة</button>
 
 <table>
-
 <tr>
-<th>المجموعة</th>
+<th>الفريق</th>
 <th>النقاط</th>
-<th>حذف</th>
+<th>⭐</th>
+<th>❌</th>
 </tr>
-
 <tbody id="teams"></tbody>
-
 </table>
+
+<button onclick="winner()">إعلان الفائز</button>
+<h2 id="winner"></h2>
+
+</div>
+
+<div class="box">
+<h3>إضافة سؤال</h3>
+
+<input id="q" placeholder="السؤال">
+
+<br>
+
+<input id="o1" placeholder="خيار 1">
+<input id="o2" placeholder="خيار 2">
+<input id="o3" placeholder="خيار 3">
+<input id="o4" placeholder="خيار 4">
+
+<br>
+
+<input id="correct" placeholder="الإجابة الصحيحة 1-4">
+
+<button onclick="addQuestion()">إضافة</button>
 
 </div>
 
@@ -139,14 +144,7 @@ padding:8px;
 
 <h2 id="question"></h2>
 
-<div>
-
-<div class="choice a" onclick="answer(0)"></div>
-<div class="choice b" onclick="answer(1)"></div>
-<div class="choice c" onclick="answer(2)"></div>
-<div class="choice d" onclick="answer(3)"></div>
-
-</div>
+<div id="answers"></div>
 
 <p id="result"></p>
 
@@ -154,34 +152,94 @@ padding:8px;
 
 <script>
 
-let questions=[
-{
-q:"كيف تكون شمولية العبادة؟",
-options:[
-"بالصلاة فقط",
-"تشمل كل جوانب الحياة",
-"بالدعاء فقط",
-"بالصوم فقط"
-],
-correct:1
-}
-]
-
-let teams=[]
-
 let correctSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3")
 let wrongSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3")
+let winSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3")
+
+let teams=JSON.parse(localStorage.getItem("teams"))||[]
+let questions=JSON.parse(localStorage.getItem("questions"))||[]
+
+function save(){
+localStorage.setItem("teams",JSON.stringify(teams))
+localStorage.setItem("questions",JSON.stringify(questions))
+}
+
+function addTeam(){
+let name=document.getElementById("teamName").value
+if(!name)return
+teams.push({name:name,points:0})
+document.getElementById("teamName").value=""
+save()
+renderTeams()
+}
+
+function renderTeams(){
+let t=document.getElementById("teams")
+t.innerHTML=""
+teams.forEach((team,i)=>{
+t.innerHTML+=`
+<tr>
+<td>${team.name}</td>
+<td>${team.points}</td>
+<td><button onclick="addPoint(${i})">⭐</button></td>
+<td><button onclick="deleteTeam(${i})">❌</button></td>
+</tr>`
+})
+}
+
+function addPoint(i){
+teams[i].points++
+save()
+renderTeams()
+}
+
+function deleteTeam(i){
+teams.splice(i,1)
+save()
+renderTeams()
+}
+
+function winner(){
+if(teams.length==0)return
+let w=teams.reduce((a,b)=>a.points>b.points?a:b)
+document.getElementById("winner").innerText="🏆 الفريق الفائز: "+w.name
+winSound.play()
+}
+
+function addQuestion(){
+
+let q=document.getElementById("q").value
+let o1=document.getElementById("o1").value
+let o2=document.getElementById("o2").value
+let o3=document.getElementById("o3").value
+let o4=document.getElementById("o4").value
+let c=parseInt(document.getElementById("correct").value)-1
+
+questions.push({
+q:q,
+options:[o1,o2,o3,o4],
+correct:c
+})
+
+save()
+showQuestion()
+
+}
 
 function showQuestion(){
+
+if(questions.length==0)return
 
 let q=questions[0]
 
 document.getElementById("question").innerText=q.q
 
-let btn=document.querySelectorAll(".choice")
+let ans=document.getElementById("answers")
 
-btn.forEach((b,i)=>{
-b.innerText=q.options[i]
+ans.innerHTML=""
+
+q.options.forEach((o,i)=>{
+ans.innerHTML+=`<div class="choice" onclick="answer(${i})">${o}</div>`
 })
 
 }
@@ -191,66 +249,16 @@ function answer(i){
 let q=questions[0]
 
 if(i==q.correct){
-
 document.getElementById("result").innerText="⭐ إجابة صحيحة"
 correctSound.play()
-
-teams.forEach(t=>t.points++)
-
-renderTeams()
-
-}
-else{
-
-document.getElementById("result").innerText="💡 حاولي مرة أخرى"
+}else{
+document.getElementById("result").innerText="❌ إجابة خاطئة"
 wrongSound.play()
-
 }
 
 }
-
-function addTeam(){
-
-let name=document.getElementById("teamName").value
-
-if(!name) return
-
-teams.push({name:name,points:0})
-
-document.getElementById("teamName").value=""
 
 renderTeams()
-
-}
-
-function renderTeams(){
-
-let table=document.getElementById("teams")
-
-table.innerHTML=""
-
-teams.forEach((t,i)=>{
-
-table.innerHTML+=`
-<tr>
-<td>${t.name}</td>
-<td>${t.points}</td>
-<td><button onclick="deleteTeam(${i})">❌</button></td>
-</tr>
-`
-
-})
-
-}
-
-function deleteTeam(i){
-
-teams.splice(i,1)
-
-renderTeams()
-
-}
-
 showQuestion()
 
 </script>
