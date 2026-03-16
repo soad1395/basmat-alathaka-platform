@@ -2,34 +2,78 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>منصة بصمة الذكاء</title>
+<title>عالم بصمة الذكاء</title>
 
 <style>
 
 body{
-font-family:Tahoma;
 direction:rtl;
+font-family:Tahoma;
 margin:0;
 text-align:center;
-background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
 color:white;
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+}
+
+/* خلفية الذكاء */
+
+.ai{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:
+radial-gradient(circle at 30% 40%,#00e5ff22,transparent),
+radial-gradient(circle at 70% 60%,#00e5ff22,transparent);
+animation:move 8s infinite alternate;
+z-index:-1;
+}
+
+@keyframes move{
+0%{filter:hue-rotate(0deg)}
+100%{filter:hue-rotate(120deg)}
 }
 
 header{
-font-size:30px;
+font-size:32px;
 padding:20px;
-text-shadow:0 0 15px #00e5ff;
+text-shadow:0 0 20px #00e5ff;
 }
 
-.container{
-background:rgba(0,0,0,.55);
+.box{
+background:#021c2d;
+margin:20px auto;
 width:90%;
 max-width:900px;
-margin:20px auto;
 padding:20px;
 border-radius:12px;
-box-shadow:0 0 20px rgba(0,255,255,.4);
+box-shadow:0 0 20px #00e5ff44;
 }
+
+/* أزرار الإجابة */
+
+.choice{
+width:120px;
+height:120px;
+border-radius:50%;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+font-size:18px;
+margin:15px;
+cursor:pointer;
+transition:.3s;
+}
+
+.choice:hover{
+transform:scale(1.2);
+}
+
+.a{background:#ffc107}
+.b{background:#00c853}
+.c{background:#ff1744}
+.d{background:#2979ff}
 
 input{
 padding:8px;
@@ -43,35 +87,7 @@ padding:10px 15px;
 border:none;
 border-radius:8px;
 background:#00e5ff;
-color:black;
 cursor:pointer;
-margin:5px;
-font-weight:bold;
-}
-
-button:hover{
-transform:scale(1.1);
-}
-
-.fingerprint{
-font-size:70px;
-cursor:pointer;
-margin:20px;
-transition:.3s;
-}
-
-.fingerprint:hover{
-transform:scale(1.3);
-}
-
-.correct{
-color:#00ff9d;
-font-size:24px;
-}
-
-.wrong{
-color:#ff5252;
-font-size:24px;
 }
 
 table{
@@ -86,38 +102,24 @@ padding:8px;
 }
 
 </style>
-
 </head>
 
 <body>
 
-<header>
-🧠 عالم بصمة الذكاء
-</header>
+<div class="ai"></div>
+
+<header>🧠 عالم بصمة الذكاء</header>
 
 <audio autoplay>
-<source src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3">
+<source src="https://assets.mixkit.co/sfx/preview/mixkit-game-level-completed-2059.mp3">
 </audio>
 
-<div class="container">
+<div class="box">
 
-<h3>البيانات الأساسية</h3>
-
-<input id="school" placeholder="اسم المدرسة">
-<input id="principal" placeholder="اسم المديرة">
-<input id="teacher" placeholder="اسم المعلمة">
-<input id="lesson" placeholder="عنوان الدرس">
-
-<button onclick="saveInfo()">حفظ البيانات</button>
-
-</div>
-
-<div class="container">
-
-<h3>إدارة المجموعات</h3>
+<h3>إضافة مجموعة</h3>
 
 <input id="teamName" placeholder="اسم المجموعة">
-<button onclick="addTeam()">إضافة مجموعة</button>
+<button onclick="addTeam()">إضافة</button>
 
 <table>
 
@@ -127,34 +129,22 @@ padding:8px;
 <th>حذف</th>
 </tr>
 
-<tbody id="teamsTable"></tbody>
+<tbody id="teams"></tbody>
 
 </table>
 
 </div>
 
-<div class="container">
+<div class="box">
 
-<h3>إضافة سؤال</h3>
-
-<input id="questionInput" placeholder="اكتب السؤال">
-
-<input id="correctAnswer" placeholder="الإجابة الصحيحة A B C D">
-
-<button onclick="addQuestion()">إضافة السؤال</button>
-
-</div>
-
-<div class="container">
-
-<h2 id="questionDisplay"></h2>
+<h2 id="question"></h2>
 
 <div>
 
-<span class="fingerprint" onclick="answer('A')">🔵</span>
-<span class="fingerprint" onclick="answer('B')">🔴</span>
-<span class="fingerprint" onclick="answer('C')">🟢</span>
-<span class="fingerprint" onclick="answer('D')">🟡</span>
+<div class="choice a" onclick="answer(0)"></div>
+<div class="choice b" onclick="answer(1)"></div>
+<div class="choice c" onclick="answer(2)"></div>
+<div class="choice d" onclick="answer(3)"></div>
 
 </div>
 
@@ -164,74 +154,56 @@ padding:8px;
 
 <script>
 
-let questions = JSON.parse(localStorage.getItem("questions")) || [];
-let teams = JSON.parse(localStorage.getItem("teams")) || [];
-let currentQuestion = 0;
-
-let correctSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3");
-let wrongSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3");
-
-function saveInfo(){
-
-let info = {
-school:school.value,
-principal:principal.value,
-teacher:teacher.value,
-lesson:lesson.value
-};
-
-localStorage.setItem("info",JSON.stringify(info));
-
-alert("تم حفظ البيانات");
-
+let questions=[
+{
+q:"كيف تكون شمولية العبادة؟",
+options:[
+"بالصلاة فقط",
+"تشمل كل جوانب الحياة",
+"بالدعاء فقط",
+"بالصوم فقط"
+],
+correct:1
 }
+]
 
-function addQuestion(){
+let teams=[]
 
-let q = questionInput.value;
-let correct = correctAnswer.value;
-
-questions.push({q,correct});
-
-localStorage.setItem("questions",JSON.stringify(questions));
-
-questionInput.value="";
-
-showQuestion();
-
-}
+let correctSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3")
+let wrongSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3")
 
 function showQuestion(){
 
-if(questions.length>0){
+let q=questions[0]
 
-document.getElementById("questionDisplay").innerText =
-questions[currentQuestion].q;
+document.getElementById("question").innerText=q.q
+
+let btn=document.querySelectorAll(".choice")
+
+btn.forEach((b,i)=>{
+b.innerText=q.options[i]
+})
 
 }
 
-}
+function answer(i){
 
-function answer(choice){
+let q=questions[0]
 
-let correct = questions[currentQuestion].correct;
+if(i==q.correct){
 
-if(choice == correct){
+document.getElementById("result").innerText="⭐ إجابة صحيحة"
+correctSound.play()
 
-result.innerHTML="<span class='correct'>⭐ إجابة صحيحة</span>";
-correctSound.play();
+teams.forEach(t=>t.points++)
 
-teams.forEach(t=>t.points++);
-
-localStorage.setItem("teams",JSON.stringify(teams));
-
-renderTeams();
+renderTeams()
 
 }
 else{
 
-result.innerHTML="<span class='wrong'>💡 حاولي مرة أخرى</span>";
-wrongSound.play();
+document.getElementById("result").innerText="💡 حاولي مرة أخرى"
+wrongSound.play()
 
 }
 
@@ -239,50 +211,47 @@ wrongSound.play();
 
 function addTeam(){
 
-let name = teamName.value;
+let name=document.getElementById("teamName").value
 
-teams.push({name,points:0});
+if(!name) return
 
-localStorage.setItem("teams",JSON.stringify(teams));
+teams.push({name:name,points:0})
 
-teamName.value="";
+document.getElementById("teamName").value=""
 
-renderTeams();
-
-}
-
-function deleteTeam(index){
-
-teams.splice(index,1);
-
-localStorage.setItem("teams",JSON.stringify(teams));
-
-renderTeams();
+renderTeams()
 
 }
 
 function renderTeams(){
 
-let table=document.getElementById("teamsTable");
+let table=document.getElementById("teams")
 
-table.innerHTML="";
+table.innerHTML=""
 
 teams.forEach((t,i)=>{
 
-table.innerHTML += `
+table.innerHTML+=`
 <tr>
 <td>${t.name}</td>
 <td>${t.points}</td>
 <td><button onclick="deleteTeam(${i})">❌</button></td>
 </tr>
-`;
+`
 
-});
+})
 
 }
 
-showQuestion();
-renderTeams();
+function deleteTeam(i){
+
+teams.splice(i,1)
+
+renderTeams()
+
+}
+
+showQuestion()
 
 </script>
 
