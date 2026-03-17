@@ -77,23 +77,13 @@ left:10px;
 font-size:50px;
 animation:float 3s infinite;
 }
+
 @keyframes float{
 0%{transform:translateY(0)}
 50%{transform:translateY(-10px)}
 100%{transform:translateY(0)}
 }
 
-/* احتفال */
-#confetti{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-pointer-events:none;
-display:none;
-font-size:25px;
-}
 #bgVideo,#bgImage{
 position:fixed;
 top:0;
@@ -111,9 +101,7 @@ z-index:-5;
 <h1>🤖 منصة بصمة الذكاء</h1>
 
 <!-- تحميل خلفية -->
-<div>
 <input type="file" accept="video/*,image/*" onchange="changeBg(event)">
-</div>
 
 <!-- البيانات -->
 <div class="box">
@@ -145,10 +133,10 @@ z-index:-5;
 <div class="box">
 <h2>السؤال</h2>
 <input id="q" placeholder="السؤال"><br>
-<input id="a1" placeholder="1">
-<input id="a2" placeholder="2">
-<input id="a3" placeholder="3">
-<input id="a4" placeholder="4"><br>
+<input id="a1">
+<input id="a2">
+<input id="a3">
+<input id="a4"><br>
 
 <select id="correct">
 <option value="0">1</option>
@@ -164,26 +152,44 @@ z-index:-5;
 
 <button onclick="winner()">🏆 إعلان الفائز</button>
 
-<div id="confetti"></div>
 <div class="robot">🤖</div>
 
 <script>
+
+/* عناصر */
+let classesDiv = document.getElementById("classes");
+let groupClass = document.getElementById("groupClass");
+let groupsDiv = document.getElementById("groups");
+let answersDiv = document.getElementById("answers");
+
+let className = document.getElementById("className");
+let groupName = document.getElementById("groupName");
+
+let q = document.getElementById("q");
+let a1 = document.getElementById("a1");
+let a2 = document.getElementById("a2");
+let a3 = document.getElementById("a3");
+let a4 = document.getElementById("a4");
+let correct = document.getElementById("correct");
+
+/* بيانات */
 let classes=[];
 let groups=[];
 let scores={};
 let correctAnswer=0;
 
 /* صوت بداية */
-window.onload=()=>{
+document.addEventListener("click", function(){
 speech("مرحباً بكم في منصة بصمة الذكاء");
-};
+},{once:true});
 
 function speech(txt){
 let msg=new SpeechSynthesisUtterance(txt);
+msg.lang="ar-SA";
 speechSynthesis.speak(msg);
 }
 
-/* الخلفية */
+/* خلفية */
 function changeBg(e){
 let file=e.target.files[0];
 if(!file) return;
@@ -213,49 +219,63 @@ document.body.appendChild(img);
 
 /* الفصول */
 function addClass(){
-let name=className.value;
+let name=className.value.trim();
 if(!name)return;
+
 classes.push(name);
 updateClasses();
+className.value="";
 }
+
 function deleteClass(i){
 classes.splice(i,1);
 updateClasses();
 }
+
 function updateClasses(){
 classesDiv.innerHTML="";
 groupClass.innerHTML="";
+
 classes.forEach((c,i)=>{
-classesDiv.innerHTML+=`<p>${c} <button onclick="deleteClass(${i})">❌</button></p>`;
+classesDiv.innerHTML+=`
+<p>${c} <button onclick="deleteClass(${i})">❌</button></p>`;
 groupClass.innerHTML+=`<option>${c}</option>`;
 });
 }
 
 /* المجموعات */
 function addGroup(){
-let name=groupName.value;
+let name=groupName.value.trim();
 let cls=groupClass.value;
+
 if(!name)return;
+
 groups.push({name,cls});
 scores[name]=0;
+
 updateGroups();
+groupName.value="";
 }
+
 function deleteGroup(i){
 delete scores[groups[i].name];
 groups.splice(i,1);
 updateGroups();
 }
+
 function addPoint(name){
 scores[name]++;
 updateGroups();
 }
+
 function updateGroups(){
 groupsDiv.innerHTML="";
+
 groups.forEach((g,i)=>{
 groupsDiv.innerHTML+=`
 <p>
-${g.name} (${g.cls}) = ${scores[g.name]}
-<button onclick="addPoint('${g.name}')">+⭐</button>
+${g.name} (${g.cls}) = ⭐ ${scores[g.name]}
+<button onclick="addPoint('${g.name}')">+1</button>
 <button onclick="deleteGroup(${i})">❌</button>
 </p>`;
 });
@@ -267,18 +287,23 @@ correctAnswer=parseInt(correct.value);
 
 let arr=[a1.value,a2.value,a3.value,a4.value];
 
-answers.innerHTML="";
+answersDiv.innerHTML="";
 
 arr.forEach((a,i)=>{
-answers.innerHTML+=`<div class="circle" onclick="check(${i},this)">${a}</div>`;
+answersDiv.innerHTML+=`
+<div class="circle" onclick="checkAnswer(${i},this)">
+${a}
+</div>`;
 });
 
-speech(q.value);
+setTimeout(()=>speech(q.value),300);
 }
 
 /* تحقق */
-function check(i,el){
-document.querySelectorAll(".circle").forEach(c=>c.classList.remove("correct","wrong"));
+function checkAnswer(i,el){
+document.querySelectorAll(".circle").forEach(c=>{
+c.classList.remove("correct","wrong");
+});
 
 if(i===correctAnswer){
 el.classList.add("correct");
@@ -294,7 +319,7 @@ function beep(ok){
 let ctx=new AudioContext();
 let o=ctx.createOscillator();
 o.connect(ctx.destination);
-o.frequency.value= ok?800:200;
+o.frequency.value= ok?700:200;
 o.start();
 setTimeout(()=>o.stop(),200);
 }
@@ -303,45 +328,41 @@ setTimeout(()=>o.stop(),200);
 function winner(){
 let max=0;
 let win="";
+
 for(let g in scores){
 if(scores[g]>max){
 max=scores[g];
 win=g;
 }
 }
-if(!win)return;
 
-speech("الفريق الفائز هو "+win);
-clap();
-confetti();
-alert("🏆 الفريق الفائز: "+win);
+if(!win){
+alert("لا يوجد نقاط");
+return;
 }
+
+/* صوت */
+speech("الفريق الفائز هو "+win);
 
 /* تصفيق */
-function clap(){
-let ctx=new AudioContext();
-let o=ctx.createOscillator();
-o.connect(ctx.destination);
-o.frequency.value=600;
-o.start();
-setTimeout(()=>o.stop(),500);
-}
+let audio=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-crowd-cheer-2050.mp3");
+audio.play();
 
-/* قصاصات */
-function confetti(){
-let c=document.getElementById("confetti");
-c.style.display="block";
-c.innerHTML="";
+/* احتفال */
 for(let i=0;i<50;i++){
 let span=document.createElement("span");
 span.innerHTML="🎉";
-span.style.position="absolute";
+span.style.position="fixed";
 span.style.left=Math.random()*100+"%";
 span.style.top=Math.random()*100+"%";
-c.appendChild(span);
+span.style.fontSize="20px";
+document.body.appendChild(span);
+setTimeout(()=>span.remove(),2000);
 }
-setTimeout(()=>c.style.display="none",3000);
+
+alert("🏆 الفريق الفائز: "+win);
 }
+
 </script>
 
 </body>
