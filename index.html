@@ -15,7 +15,7 @@ background:#020617;
 overflow-x:hidden;
 }
 
-/* خلفية نيون متحركة */
+/* خلفية نيون */
 body::before{
 content:"";
 position:fixed;
@@ -83,7 +83,7 @@ animation:float 3s infinite;
 100%{transform:translateY(0)}
 }
 
-/* 🎉 احتفال */
+/* احتفال */
 #confetti{
 position:fixed;
 top:0;
@@ -94,12 +94,26 @@ pointer-events:none;
 display:none;
 font-size:25px;
 }
+#bgVideo,#bgImage{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+object-fit:cover;
+z-index:-5;
+}
 </style>
 </head>
 
 <body>
 
 <h1>🤖 منصة بصمة الذكاء</h1>
+
+<!-- تحميل خلفية -->
+<div>
+<input type="file" accept="video/*,image/*" onchange="changeBg(event)">
+</div>
 
 <!-- البيانات -->
 <div class="box">
@@ -164,15 +178,42 @@ window.onload=()=>{
 speech("مرحباً بكم في منصة بصمة الذكاء");
 };
 
-/* صوت */
 function speech(txt){
 let msg=new SpeechSynthesisUtterance(txt);
 speechSynthesis.speak(msg);
 }
 
+/* الخلفية */
+function changeBg(e){
+let file=e.target.files[0];
+if(!file) return;
+
+let url=URL.createObjectURL(file);
+
+let oldVideo=document.getElementById("bgVideo");
+let oldImg=document.getElementById("bgImage");
+if(oldVideo) oldVideo.remove();
+if(oldImg) oldImg.remove();
+
+if(file.type.startsWith("video")){
+let video=document.createElement("video");
+video.id="bgVideo";
+video.src=url;
+video.autoplay=true;
+video.loop=true;
+video.muted=true;
+document.body.appendChild(video);
+}else{
+let img=document.createElement("img");
+img.id="bgImage";
+img.src=url;
+document.body.appendChild(img);
+}
+}
+
 /* الفصول */
 function addClass(){
-let name=document.getElementById("className").value;
+let name=className.value;
 if(!name)return;
 classes.push(name);
 updateClasses();
@@ -182,20 +223,18 @@ classes.splice(i,1);
 updateClasses();
 }
 function updateClasses(){
-let div=document.getElementById("classes");
-let sel=document.getElementById("groupClass");
-div.innerHTML="";
-sel.innerHTML="";
+classesDiv.innerHTML="";
+groupClass.innerHTML="";
 classes.forEach((c,i)=>{
-div.innerHTML+=`<p>${c} <button onclick="deleteClass(${i})">❌</button></p>`;
-sel.innerHTML+=`<option>${c}</option>`;
+classesDiv.innerHTML+=`<p>${c} <button onclick="deleteClass(${i})">❌</button></p>`;
+groupClass.innerHTML+=`<option>${c}</option>`;
 });
 }
 
 /* المجموعات */
 function addGroup(){
-let name=document.getElementById("groupName").value;
-let cls=document.getElementById("groupClass").value;
+let name=groupName.value;
+let cls=groupClass.value;
 if(!name)return;
 groups.push({name,cls});
 scores[name]=0;
@@ -211,10 +250,9 @@ scores[name]++;
 updateGroups();
 }
 function updateGroups(){
-let div=document.getElementById("groups");
-div.innerHTML="";
+groupsDiv.innerHTML="";
 groups.forEach((g,i)=>{
-div.innerHTML+=`
+groupsDiv.innerHTML+=`
 <p>
 ${g.name} (${g.cls}) = ${scores[g.name]}
 <button onclick="addPoint('${g.name}')">+⭐</button>
@@ -225,17 +263,14 @@ ${g.name} (${g.cls}) = ${scores[g.name]}
 
 /* السؤال */
 function showQ(){
-correctAnswer=parseInt(document.getElementById("correct").value);
+correctAnswer=parseInt(correct.value);
 
-let arr=[
-a1.value,a2.value,a3.value,a4.value
-];
+let arr=[a1.value,a2.value,a3.value,a4.value];
 
-let div=document.getElementById("answers");
-div.innerHTML="";
+answers.innerHTML="";
 
 arr.forEach((a,i)=>{
-div.innerHTML+=`<div class="circle" onclick="check(${i},this)">${a}</div>`;
+answers.innerHTML+=`<div class="circle" onclick="check(${i},this)">${a}</div>`;
 });
 
 speech(q.value);
@@ -264,7 +299,7 @@ o.start();
 setTimeout(()=>o.stop(),200);
 }
 
-/* 🎉 الفائز */
+/* الفائز */
 function winner(){
 let max=0;
 let win="";
