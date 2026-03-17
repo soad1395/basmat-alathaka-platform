@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
@@ -25,7 +25,6 @@ background-size:80px 80px;
 animation:move 40s linear infinite;
 z-index:-1;
 }
-
 @keyframes move{
 0%{transform:translate(0,0)}
 100%{transform:translate(200px,200px)}
@@ -121,78 +120,68 @@ cursor:pointer;
 <button onclick="winner()">🏆 إعلان الفائز</button>
 
 <script>
-
-/* عناصر */
-let classesDiv=document.getElementById("classes");
-let groupClass=document.getElementById("groupClass");
-let groupsDiv=document.getElementById("groups");
-let answersDiv=document.getElementById("answers");
-
-let className=document.getElementById("className");
-let groupName=document.getElementById("groupName");
-
-let q=document.getElementById("q");
-let a1=document.getElementById("a1");
-let a2=document.getElementById("a2");
-let a3=document.getElementById("a3");
-let a4=document.getElementById("a4");
-let correct=document.getElementById("correct");
-
-/* بيانات */
 let classes=[];
 let groups=[];
 let scores={};
 let correctAnswer=0;
 
-/* الفصول */
 function addClass(){
-if(!className.value) return;
-classes.push(className.value);
+let name=document.getElementById("className").value;
+if(!name) return;
+classes.push(name);
 updateClasses();
-className.value="";
 }
 
 function updateClasses(){
-classesDiv.innerHTML="";
-groupClass.innerHTML="";
-classes.forEach((c,i)=>{
-classesDiv.innerHTML+=`<p>${c}</p>`;
-groupClass.innerHTML+=`<option>${c}</option>`;
+let div=document.getElementById("classes");
+let select=document.getElementById("groupClass");
+div.innerHTML="";
+select.innerHTML="";
+classes.forEach(c=>{
+div.innerHTML+=`<p>${c}</p>`;
+select.innerHTML+=`<option>${c}</option>`;
 });
 }
 
-/* المجموعات */
 function addGroup(){
-if(!groupName.value) return;
-groups.push({name:groupName.value,cls:groupClass.value});
-scores[groupName.value]=0;
+let name=document.getElementById("groupName").value;
+let cls=document.getElementById("groupClass").value;
+if(!name) return;
+groups.push({name,cls});
+scores[name]=0;
 updateGroups();
-groupName.value="";
 }
 
 function updateGroups(){
-groupsDiv.innerHTML="";
+let div=document.getElementById("groups");
+div.innerHTML="";
 groups.forEach(g=>{
-groupsDiv.innerHTML+=`<p>${g.name} (${g.cls}) = ${scores[g.name]}</p>`;
+div.innerHTML+=`<p>${g.name} (${g.cls}) = ${scores[g.name]}</p>`;
 });
 }
 
-/* السؤال */
 function showQ(){
-correctAnswer=parseInt(correct.value);
+correctAnswer=parseInt(document.getElementById("correct").value);
 
-let arr=[a1.value,a2.value,a3.value,a4.value];
+let arr=[
+document.getElementById("a1").value,
+document.getElementById("a2").value,
+document.getElementById("a3").value,
+document.getElementById("a4").value
+];
 
-answersDiv.innerHTML="";
+let div=document.getElementById("answers");
+div.innerHTML="";
 
 arr.forEach((a,i)=>{
-answersDiv.innerHTML+=`<div class="circle" onclick="check(${i},this)">${a}</div>`;
+div.innerHTML+=`<div class="circle" onclick="check(${i},this)">${a}</div>`;
 });
 }
 
-/* تحقق */
 function check(i,el){
-document.querySelectorAll(".circle").forEach(c=>c.classList.remove("correct","wrong"));
+document.querySelectorAll(".circle").forEach(c=>{
+c.classList.remove("correct","wrong");
+});
 
 if(i===correctAnswer){
 el.classList.add("correct");
@@ -201,7 +190,6 @@ el.classList.add("wrong");
 }
 }
 
-/* الفائز */
 function winner(){
 let max=0;
 let win="";
@@ -213,8 +201,7 @@ win=g;
 }
 alert("🏆 الفريق الفائز: "+win);
 }
-
 </script>
 
 </body>
-</html> 
+</html>
