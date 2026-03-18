@@ -13,6 +13,7 @@ text-align:center;
 overflow-y:auto;
 }
 
+/* فيديو */
 #bg{
 position:fixed;
 top:0;
@@ -23,6 +24,7 @@ object-fit:cover;
 z-index:-1;
 }
 
+/* صندوق */
 .box{
 background:rgba(0,0,0,0.6);
 margin:15px;
@@ -30,6 +32,7 @@ padding:15px;
 border-radius:15px;
 }
 
+/* زر */
 button{
 padding:10px;
 border:none;
@@ -39,6 +42,7 @@ margin:5px;
 cursor:pointer;
 }
 
+/* دوائر */
 .circle{
 width:110px;
 height:110px;
@@ -49,23 +53,16 @@ align-items:center;
 justify-content:center;
 margin:10px;
 cursor:pointer;
-font-size:18px;
 }
 
-.correct{background:green;}
-.wrong{background:red;}
+.correct{background:#2ecc71;}
+.wrong{background:#e74c3c;}
 
 #robot{
 position:fixed;
 bottom:10px;
 left:10px;
 font-size:40px;
-animation:up 2s infinite alternate;
-}
-
-@keyframes up{
-from{transform:translateY(0)}
-to{transform:translateY(-10px)}
 }
 
 #win{
@@ -84,21 +81,18 @@ display:none;
 <h1>🤖 منصة بصمة الذكاء</h1>
 <div id="robot">🤖✨</div>
 
-<!-- فيديو -->
 <div class="box">
 <input type="file" accept="video/*" onchange="setVideo(event)">
 </div>
 
-<!-- البيانات -->
 <div class="box">
 <h2>البيانات</h2>
-<input id="t" placeholder="المعلمة">
-<input id="s" placeholder="المدرسة">
-<input id="m" placeholder="المادة">
-<input id="g" placeholder="الصف">
+<input placeholder="المعلمة">
+<input placeholder="المدرسة">
+<input placeholder="المادة">
+<input placeholder="الصف">
 </div>
 
-<!-- الفصول -->
 <div class="box">
 <h2>الفصول</h2>
 <input id="classInput">
@@ -106,7 +100,6 @@ display:none;
 <div id="classList"></div>
 </div>
 
-<!-- المجموعات -->
 <div class="box">
 <h2>المجموعات</h2>
 <input id="groupInput">
@@ -121,7 +114,6 @@ display:none;
 
 </div>
 
-<!-- السؤال -->
 <div class="box">
 <h2>السؤال</h2>
 <input id="q"><br>
@@ -189,12 +181,20 @@ for(let c in data){
 classList.innerHTML+=`
 <div>${c}
 <button onclick="selectClass('${c}')">اختيار</button>
+<button onclick="deleteClass('${c}')">❌</button>
 </div>`;
 }
 }
 
 function selectClass(c){
 currentClass=c;
+renderGroups();
+}
+
+function deleteClass(c){
+delete data[c];
+save();
+renderClasses();
 renderGroups();
 }
 
@@ -217,9 +217,17 @@ groupSelect.innerHTML="";
 if(!currentClass) return;
 
 for(let g in data[currentClass]){
-groups.innerHTML+=`${g} ⭐ ${data[currentClass][g]}<br>`;
+groups.innerHTML+=`
+${g} ⭐ ${data[currentClass][g]}
+<button onclick="deleteGroup('${g}')">❌</button><br>`;
 groupSelect.innerHTML+=`<option>${g}</option>`;
 }
+}
+
+function deleteGroup(g){
+delete data[currentClass][g];
+save();
+renderGroups();
 }
 
 /* عجلة */
@@ -259,7 +267,7 @@ function checkAnswer(i){
 
 let circles=document.querySelectorAll(".circle");
 let g=groupSelect.value;
-let c=Number(document.getElementById("correct").value);
+let c=parseInt(document.getElementById("correct").value);
 
 if(!g){
 alert("اختاري مجموعة");
@@ -275,9 +283,10 @@ circles[i].classList.add("correct");
 data[currentClass][g]++;
 speak("إجابة صحيحة");
 clap();
+confetti();
 }else{
 circles[i].classList.add("wrong");
-speak("إجابة خاطئة");
+speak("خطأ");
 }
 
 save();
@@ -297,7 +306,31 @@ name=g;
 win.innerHTML="🏆 "+name+" 🎉👏";
 win.style.display="block";
 clap();
+confetti();
 speak("الفائز هو "+name);
+}
+
+/* قصاصات */
+function confetti(){
+for(let i=0;i<40;i++){
+let d=document.createElement("div");
+d.style.position="fixed";
+d.style.width="8px";
+d.style.height="8px";
+d.style.background=`hsl(${Math.random()*360},100%,50%)`;
+d.style.top="0";
+d.style.left=Math.random()*100+"%";
+document.body.appendChild(d);
+
+let fall=setInterval(()=>{
+d.style.top=(d.offsetTop+5)+"px";
+},20);
+
+setTimeout(()=>{
+clearInterval(fall);
+d.remove();
+},2000);
+}
 }
 
 /* حفظ */
