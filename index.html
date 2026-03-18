@@ -251,22 +251,30 @@ speak("المجموعة "+g);
 
 /* سؤال */
 function showQ(){
-let answers=[a1.value,a2.value,a3.value,a4.value];
-qBox.innerHTML="<h3>"+q.value+"</h3>";
 
-answers.forEach((a,i)=>{
-qBox.innerHTML+=`
-<div class="circle" data-i="${i}" onclick="check(this)">
-${a}
-</div>`;
-});
+  let answers=[a1.value,a2.value,a3.value,a4.value];
+
+  qBox.innerHTML="<h3>"+q.value+"</h3>";
+
+  answers.forEach((a,i)=>{
+    let div = document.createElement("div");
+    div.className = "circle";
+    div.innerText = a;
+    div.setAttribute("data-i", i);
+
+    div.onclick = function(){
+      check(this);
+    };
+
+    qBox.appendChild(div);
+  });
+
 }
 
 /* إجابة *}
 function check(el){
-
-let correctIndex = parseInt(document.getElementById("correct").value);
-let clickedIndex = parseInt(el.getAttribute("data-i"));
+let correctIndex = document.getElementById("correct").selectedIndex;
+let clickedIndex = Number(el.getAttribute("data-i"));
 let g = document.getElementById("groupSelect").value;
 
 // تنظيف
@@ -338,6 +346,7 @@ setTimeout(()=>{clearInterval(fall);d.remove()},2000);
 function saveData(){
 localStorage.setItem("data",JSON.stringify(data));
 }
+renderGroups();
 
 </script>
 
