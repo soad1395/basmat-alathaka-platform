@@ -2,23 +2,21 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>منصة بصمة الذكاء</title>
+<title>بصمة الذكاء</title>
 
 <style>
 body{
 direction:rtl;
 font-family:tahoma;
-text-align:center;
 margin:0;
 color:white;
+text-align:center;
 overflow:hidden;
 }
 
-/* فيديو خلفية */
-video{
+/* فيديو */
+#bg{
 position:fixed;
-top:0;
-left:0;
 width:100%;
 height:100%;
 object-fit:cover;
@@ -46,11 +44,10 @@ cursor:pointer;
 /* قصاصات */
 .confetti{
 position:fixed;
-width:10px;
-height:10px;
-background:red;
+width:8px;
+height:8px;
 top:-10px;
-animation:fall 3s linear infinite;
+animation:fall 3s linear;
 }
 
 @keyframes fall{
@@ -61,107 +58,147 @@ to{transform:translateY(100vh);}
 
 <body>
 
-<!-- فيديو خلفية -->
-<video id="bgVideo" autoplay muted loop></video>
+<video id="bg" autoplay muted loop></video>
 
-<h1>🤖 منصة بصمة الذكاء</h1>
+<h1>🤖 بصمة الذكاء</h1>
 
-<button onclick="enableSound()">🔊 تشغيل الصوت</button>
 <input type="file" accept="video/*" onchange="setVideo(event)">
+<button onclick="welcome()">🔊 تشغيل الصوت</button>
 
-<audio id="startSound" src="https://www.soundjay.com/buttons/button-3.mp3"></audio>
-<audio id="correctSound" src="https://www.soundjay.com/buttons/button-4.mp3"></audio>
-<audio id="clap" src="https://www.soundjay.com/human/applause-8.mp3"></audio>
-
-<!-- الفصول -->
 <div class="box">
-<h3>الفصول</h3>
-<input id="classInput">
-<button onclick="addClass()">إضافة</button>
-<div id="classes"></div>
+<input id="className" placeholder="اسم الفصل">
+<button onclick="setClass()">اختيار الفصل</button>
 </div>
 
-<!-- المجموعات -->
 <div class="box">
-<h3>المجموعات</h3>
-<input id="groupInput">
-<button onclick="addGroup()">إضافة</button>
+<input id="groupName" placeholder="اسم المجموعة">
+<button onclick="addGroup()">إضافة مجموعة</button>
 <div id="groups"></div>
 </div>
 
-<!-- إعلان -->
-<button onclick="showWinner()">🏆 إعلان الفائز</button>
+<button onclick="winner()">🏆 إعلان الفائز</button>
 
 <h2 id="result"></h2>
 
 <script>
 
-/* ================= حفظ ================= */
-let groups = JSON.parse(localStorage.getItem("groups")||"[]");
+// ===== التخزين =====
+let DB = JSON.parse(localStorage.getItem("AI_DB") || "{}");
+let currentClass = localStorage.getItem("CLASS") || "";
 
-function save(){
-localStorage.setItem("groups", JSON.stringify(groups));
+// ===== فيديو =====
+function setVideo(e){
+let url = URL.createObjectURL(e.target.files[0]);
+bg.src = url;
+localStorage.setItem("video", url);
+}
+if(localStorage.getItem("video")){
+bg.src = localStorage.getItem("video");
 }
 
-/* ================= المجموعات ================= */
+// ===== صوت دخول =====
+function welcome(){
+let msg = new SpeechSynthesisUtterance("مرحباً بكم في عالم الذكاء");
+msg.lang="ar-SA";
+speechSynthesis.speak(msg);
+}
+
+// ===== حفظ =====
+function save(){
+localStorage.setItem("AI_DB", JSON.stringify(DB));
+localStorage.setItem("CLASS", currentClass);
+}
+
+// ===== اختيار فصل =====
+function setClass(){
+currentClass = className.value;
+
+if(!DB[currentClass]){
+DB[currentClass] = [];
+}
+
+save();
+render();
+}
+
+// ===== إضافة مجموعة (مشتركة لكل الفصول) =====
 function addGroup(){
-let name = document.getElementById("groupInput").value;
+let name = groupName.value;
 if(!name) return;
 
-groups.push({name:name, score:0});
+Object.keys(DB).forEach(cls=>{
+DB[cls].push({name:name,score:0});
+});
+
+if(!DB[currentClass]){
+DB[currentClass]=[];
+}
+
+DB[currentClass].push({name:name,score:0});
+
 save();
 render();
 }
 
+// ===== نقاط =====
 function addPoint(i){
-groups[i].score++;
+DB[currentClass][i].score++;
 save();
 render();
-document.getElementById("correctSound").play();
+
+// صوت
+new Audio("https://www.soundjay.com/buttons/button-4.mp3").play();
 }
 
+// ===== حذف =====
 function removeGroup(i){
-groups.splice(i,1);
+Object.keys(DB).forEach(cls=>{
+DB[cls].splice(i,1);
+});
 save();
 render();
 }
 
-/* ================= عرض ================= */
+// ===== عرض =====
 function render(){
-let div = document.getElementById("groups");
-div.innerHTML="";
+groups.innerHTML="";
 
-groups.forEach((g,i)=>{
-div.innerHTML += `
+if(!DB[currentClass]) return;
+
+DB[currentClass].forEach((g,i)=>{
+groups.innerHTML+=`
 <div>
-❌ <button onclick="removeGroup(${i})">X</button>
+<button onclick="addPoint(${i})">1+</button>
 ⭐ ${g.score} ${g.name}
-<button onclick="addPoint(${i})">+1</button>
+<button onclick="removeGroup(${i})">❌</button>
 </div>
 `;
 });
 }
 
-render();
+// ===== فائز =====
+function winner(){
+let list = DB[currentClass];
+if(!list) return;
 
-/* ================= الفائز ================= */
-function showWinner(){
-if(groups.length==0) return;
+let max = Math.max(...list.map(g=>g.score));
+let win = list.filter(g=>g.score==max);
 
-let max = Math.max(...groups.map(g=>g.score));
-let winner = groups.find(g=>g.score==max);
+let names = win.map(w=>w.name).join(" و ");
 
-document.getElementById("result").innerHTML =
-"🏆 الفائز: "+winner.name+" ("+winner.score+")";
+result.innerHTML="🏆 "+names;
 
-document.getElementById("clap").play();
-confetti();
-}
+// صوت
+new Audio("https://www.soundjay.com/human/applause-8.mp3").play();
 
-/* ================= قصاصات ================= */
-function confetti(){
-for(let i=0;i<50;i++){
-let c = document.createElement("div");
+// روبوت
+let msg=new SpeechSynthesisUtterance("الفائز هو "+names);
+msg.lang="ar-SA";
+speechSynthesis.speak(msg);
+
+// قصاصات
+for(let i=0;i<40;i++){
+let c=document.createElement("div");
 c.className="confetti";
 c.style.left=Math.random()*100+"%";
 c.style.background=`hsl(${Math.random()*360},100%,50%)`;
@@ -170,30 +207,8 @@ setTimeout(()=>c.remove(),3000);
 }
 }
 
-/* ================= الصوت أول دخول ================= */
-window.onload = ()=>{
-document.getElementById("startSound").play().catch(()=>{});
-}
-
-/* ================= تشغيل الصوت ================= */
-function enableSound(){
-document.getElementById("startSound").play();
-}
-
-/* ================= الفيديو ================= */
-function setVideo(e){
-let file = e.target.files[0];
-if(file){
-let url = URL.createObjectURL(file);
-document.getElementById("bgVideo").src = url;
-localStorage.setItem("video", url);
-}
-}
-
-let savedVideo = localStorage.getItem("video");
-if(savedVideo){
-document.getElementById("bgVideo").src = savedVideo;
-}
+// ===== تشغيل =====
+render();
 
 </script>
 
