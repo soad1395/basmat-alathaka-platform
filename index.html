@@ -25,19 +25,18 @@ object-fit:cover;
 z-index:-1;
 }
 
-/* صندوق */
+/* تصميم */
 .box{
 background:#0f172acc;
-margin:20px;
+margin:15px;
 padding:20px;
 border-radius:20px;
 }
 
-/* أزرار */
 button{
 background:#22d3ee;
 border:none;
-padding:10px 20px;
+padding:10px 15px;
 border-radius:10px;
 margin:5px;
 cursor:pointer;
@@ -59,26 +58,24 @@ display:inline-flex;
 align-items:center;
 justify-content:center;
 margin:10px;
-background:red;
+background:#ef4444;
 cursor:pointer;
-font-size:18px;
 }
 
-.correct{background:green;}
-.wrong{background:red;}
+.correct{background:#22c55e;}
+.wrong{background:#ef4444;}
 
 /* روبوت */
 #robot{
 position:fixed;
-bottom:20px;
-left:20px;
-font-size:40px;
-animation:float 2s infinite alternate;
+bottom:15px;
+left:15px;
+font-size:35px;
+animation:move 2s infinite alternate;
 }
-
-@keyframes float{
+@keyframes move{
 from{transform:translateY(0)}
-to{transform:translateY(-15px)}
+to{transform:translateY(-10px)}
 }
 
 /* احتفال */
@@ -88,10 +85,10 @@ position:fixed;
 top:30%;
 left:0;
 right:0;
-font-size:30px;
-background:#000000aa;
+background:#000000cc;
 padding:20px;
 border-radius:20px;
+font-size:25px;
 }
 </style>
 </head>
@@ -99,16 +96,15 @@ border-radius:20px;
 <body>
 
 <!-- فيديو -->
-<video id="bg" autoplay muted loop playsinline>
-<source src="https://www.w3schools.com/howto/rain.mp4" type="video/mp4">
+<video id="bg" autoplay muted loop>
+<source src="https://www.w3schools.com/howto/rain.mp4">
 </video>
 
 <h1>🤖 منصة بصمة الذكاء</h1>
 
-<!-- اختيار فيديو -->
 <label style="background:#22d3ee;padding:10px;border-radius:10px;cursor:pointer;">
-🎬 اختيار فيديو
-<input type="file" accept="video/*" onchange="setVideo(event)" hidden>
+🎬 تغيير الخلفية
+<input type="file" accept="video/*" hidden onchange="setVideo(event)">
 </label>
 
 <button onclick="speak('أهلاً بكم')">🔊 تشغيل الصوت</button>
@@ -122,25 +118,23 @@ border-radius:20px;
 <input placeholder="الصف">
 </div>
 
-<!-- الفصل -->
+<!-- الفصول -->
 <div class="box">
-<h2>الفصل</h2>
+<h2>الفصول</h2>
 <input id="className" placeholder="اسم الفصل">
-<button onclick="setClass()">اختيار</button>
+<button onclick="addClass()">إضافة</button>
+
+<div id="classList"></div>
 </div>
 
 <!-- المجموعات -->
 <div class="box">
 <h2>المجموعات</h2>
-
 <input id="groupName" placeholder="اسم المجموعة">
 <button onclick="addGroup()">إضافة</button>
 
-<br><br>
-
-<select id="activeGroup">
-<option>اختر المجموعة</option>
-</select>
+<br>
+<select id="activeGroup"></select>
 
 <div id="groups"></div>
 </div>
@@ -172,14 +166,12 @@ border-radius:20px;
 <button onclick="winner()">🏆 إعلان الفائز</button>
 <h2 id="result"></h2>
 
-<!-- احتفال -->
 <div id="celebration">
 🏆🎉🎉🎉  
 <h2 id="winnerName"></h2>
 🎉🎉🎉
 </div>
 
-<!-- روبوت -->
 <div id="robot">🤖✨</div>
 
 <script>
@@ -194,10 +186,7 @@ localStorage.setItem("AI", JSON.stringify(data));
 
 /* فيديو */
 function setVideo(e){
-let file = e.target.files[0];
-if(file){
-bg.src = URL.createObjectURL(file);
-}
+bg.src = URL.createObjectURL(e.target.files[0]);
 }
 
 /* صوت */
@@ -207,20 +196,43 @@ msg.lang="ar-SA";
 speechSynthesis.speak(msg);
 }
 
-/* فصل */
-function setClass(){
-currentClass = className.value;
+/* فصول */
+function addClass(){
+let c = className.value;
+if(!data[c]) data[c]={};
 
-if(!data[currentClass]){
-data[currentClass] = {};
-}
-
+currentClass = c;
 save();
+showClasses();
 show();
-speak("تم اختيار الفصل");
 }
 
-/* إضافة مجموعة */
+function showClasses(){
+classList.innerHTML="";
+
+for(let c in data){
+classList.innerHTML += `
+<div class="box">
+${c}
+<button onclick="selectClass('${c}')">اختيار</button>
+<button onclick="deleteClass('${c}')">❌</button>
+</div>
+`;
+}
+}
+
+function selectClass(c){
+currentClass = c;
+show();
+}
+
+function deleteClass(c){
+delete data[c];
+save();
+showClasses();
+}
+
+/* مجموعات */
 function addGroup(){
 let g = groupName.value;
 
@@ -228,14 +240,8 @@ for(let c in data){
 data[c][g] = data[c][g] || 0;
 }
 
-if(!data[currentClass]){
-data[currentClass] = {};
-data[currentClass][g] = 0;
-}
-
 save();
 show();
-speak("تمت إضافة مجموعة");
 }
 
 /* عرض */
@@ -255,26 +261,29 @@ activeGroup.innerHTML += `<option value="${g}">${g}</option>`;
 }
 }
 
-/* نقطة */
+/* نقاط */
 function addPoint(g){
 data[currentClass][g]++;
 save();
 show();
-
-new Audio("https://www.soundjay.com/buttons/button-3.mp3").play();
 speak("أحسنت");
 }
 
-/* عرض سؤال */
+/* سؤال */
 function showQ(){
-let q = question.value;
-let arr = [a1.value,a2.value,a3.value,a4.value];
-let c = correct.value;
 
-qBox.innerHTML = `<h3>${q}</h3>`;
+if(!a1.value||!a2.value||!a3.value||!a4.value){
+alert("اكتب الإجابات");
+return;
+}
+
+let arr=[a1.value,a2.value,a3.value,a4.value];
+let c=correct.value;
+
+qBox.innerHTML=`<h3>${question.value}</h3>`;
 
 arr.forEach((ans,i)=>{
-qBox.innerHTML += `
+qBox.innerHTML+=`
 <div class="circle" onclick="check(${i},${c})">${ans}</div>
 `;
 });
@@ -282,26 +291,21 @@ qBox.innerHTML += `
 
 /* تحقق */
 function check(i,c){
-let circles = document.querySelectorAll(".circle");
 
+let circles=document.querySelectorAll(".circle");
 circles.forEach(el=>el.classList.remove("correct","wrong"));
 
-if(i == c){
-
+if(i==c){
 circles[i].classList.add("correct");
 
-let g = activeGroup.value;
+let g=activeGroup.value;
 
-if(!g || g === "اختر المجموعة"){
-alert("اختاري مجموعة أول");
-return;
-}
+if(!g){alert("اختاري مجموعة");return;}
 
 data[currentClass][g]++;
 save();
 show();
 
-new Audio("https://www.soundjay.com/buttons/button-3.mp3").play();
 speak("إجابة صحيحة");
 
 }else{
@@ -311,23 +315,24 @@ circles[i].classList.add("wrong");
 
 /* فائز */
 function winner(){
-let max=-1, win="";
+let max=-1,win="";
 
 for(let g in data[currentClass]){
-if(data[currentClass][g] > max){
-max = data[currentClass][g];
-win = g;
+if(data[currentClass][g]>max){
+max=data[currentClass][g];
+win=g;
 }
 }
 
 result.innerHTML="🏆 "+win;
 
 celebration.style.display="block";
-winnerName.innerText = win;
+winnerName.innerText=win;
 
-new Audio("https://www.soundjay.com/human/applause-8.mp3").play();
-speak("الفائز هو " + win);
+speak("الفائز هو "+win);
 }
+
+showClasses();
 
 </script>
 
