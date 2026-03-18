@@ -255,25 +255,29 @@ qBox.appendChild(div);
 });
 }
 
-/* الإجابة - أنتِ تحددين الصح */
+/* الإجابات */
+let correctElement=null;
+
 function check(el){
 
 let g = document.getElementById("groupSelect").value;
 
 /* أول ضغط = تحديد الصح */
-if(!document.querySelector(".correct")){
+if(!correctElement){
+correctElement = el;
 el.classList.add("correct");
 speak("تم تحديد الإجابة الصحيحة");
 return;
 }
 
-/* بعدها الطالبات يجاوبون */
-if(el.classList.contains("correct")){
+/* إجابات الطالبات */
+if(el === correctElement){
 
 if(g && data[currentClass] && data[currentClass][g] !== undefined){
 data[currentClass][g] += 1;
 }
 
+el.classList.add("correct");
 speak("إجابة صحيحة");
 clap();
 confetti();
