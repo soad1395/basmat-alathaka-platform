@@ -7,6 +7,7 @@
 <style>
 body{margin:0;font-family:tahoma;text-align:center;color:white}
 
+/* فيديو كامل */
 #bg{
 position:fixed;
 top:0;left:0;
@@ -17,7 +18,8 @@ z-index:-1;
 
 .box{
 background:rgba(0,0,0,0.6);
-margin:10px;padding:10px;
+margin:10px;
+padding:10px;
 border-radius:10px;
 }
 
@@ -25,6 +27,7 @@ button{
 padding:8px;margin:5px;
 border:none;border-radius:8px;
 background:#00eaff;
+cursor:pointer;
 }
 
 .circle{
@@ -51,7 +54,8 @@ cursor:pointer;
 
 <h2>🤖 بصمة الذكاء</h2>
 
-<button onclick="speak('مرحباً بكم')">🔊 تشغيل الصوت</button>
+<!-- صوت -->
+<button onclick="startSound()">🔊 تشغيل الصوت</button>
 
 <!-- البيانات -->
 <div class="box">
@@ -84,7 +88,7 @@ cursor:pointer;
 
 <!-- السؤال -->
 <div class="box">
-<input id="q"><br>
+<input id="q" placeholder="السؤال"><br>
 <input id="a1"><input id="a2"><br>
 <input id="a3"><input id="a4"><br>
 
@@ -96,19 +100,26 @@ cursor:pointer;
 </select>
 
 <button onclick="showQ()">عرض</button>
-
 <div id="qBox"></div>
 </div>
+
+<button onclick="winner()">🏆 الفائز</button>
+<h2 id="win"></h2>
 
 <script>
 
 let data={},currentClass="";
 
+/* صوت */
 function speak(t){
 speechSynthesis.cancel();
 let m=new SpeechSynthesisUtterance(t);
 m.lang="ar-SA";
 speechSynthesis.speak(m);
+}
+
+function startSound(){
+speak("مرحباً بكم");
 }
 
 /* فصول */
@@ -124,13 +135,22 @@ renderGroups();
 function renderClasses(){
 classList.innerHTML="";
 for(let c in data){
-classList.innerHTML+=`${c}
-<button onclick="selectClass('${c}')">اختيار</button><br>`;
+classList.innerHTML+=`
+<div>${c}
+<button onclick="selectClass('${c}')">اختيار</button>
+<button onclick="deleteClass('${c}')">❌</button>
+</div>`;
 }
 }
 
 function selectClass(c){
 currentClass=c;
+renderGroups();
+}
+
+function deleteClass(c){
+delete data[c];
+renderClasses();
 renderGroups();
 }
 
@@ -146,14 +166,22 @@ function renderGroups(){
 groups.innerHTML="";
 groupSelect.innerHTML="";
 for(let g in data[currentClass]||{}){
-groups.innerHTML+=`${g} ⭐ ${data[currentClass][g]}<br>`;
+groups.innerHTML+=`
+${g} ⭐ ${data[currentClass][g]}
+<button onclick="deleteGroup('${g}')">❌</button><br>`;
 groupSelect.innerHTML+=`<option>${g}</option>`;
 }
 }
 
-/* نقطة */
+function deleteGroup(g){
+delete data[currentClass][g];
+renderGroups();
+}
+
+/* نقطة يدوي فقط */
 function addPoint(){
 let g=groupSelect.value;
+if(!g)return;
 data[currentClass][g]++;
 renderGroups();
 }
@@ -161,38 +189,55 @@ renderGroups();
 /* عجلة */
 function spin(){
 let arr=Object.keys(data[currentClass]||{});
+if(arr.length===0)return;
+
 let g=arr[Math.floor(Math.random()*arr.length)];
-selected.innerText=g;
+selected.innerText="🎯 "+g;
 groupSelect.value=g;
 }
 
-/* سؤال */
+/* عرض السؤال */
 function showQ(){
 let answers=[a1.value,a2.value,a3.value,a4.value];
 
 qBox.innerHTML="<h3>"+q.value+"</h3>";
 
 answers.forEach((a,i)=>{
-qBox.innerHTML+=`<div class="circle" data-i="${i}" onclick="check(this)">${a}</div>`;
+qBox.innerHTML+=`
+<div class="circle" data-i="${i}" onclick="check(this)">
+${a}
+</div>`;
 });
 }
 
-/* إصلاح الإجابة */
+/* الإجابة (مصَححة نهائي) */
 function check(el){
-let c=parseInt(correct.value);
-let i=parseInt(el.dataset.i);
+let correctIndex=parseInt(correct.value);
+let clicked=parseInt(el.dataset.i);
 
 document.querySelectorAll(".circle").forEach(e=>{
 e.classList.remove("correct","wrong");
 });
 
-if(i===c){
+if(clicked===correctIndex){
 el.classList.add("correct");
 speak("صح");
 }else{
 el.classList.add("wrong");
 speak("خطأ");
 }
+}
+
+/* الفائز */
+function winner(){
+let max=-1,name="";
+for(let g in data[currentClass]){
+if(data[currentClass][g]>max){
+max=data[currentClass][g];
+name=g;
+}
+}
+win.innerText="🏆 "+name;
 }
 
 </script>
