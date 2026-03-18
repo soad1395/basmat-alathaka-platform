@@ -1,25 +1,21 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>منصة بصمة الذكاء</title>
+<title>بصمة الذكاء</title>
 
 <style>
 body{
 direction:rtl;
 font-family:tahoma;
-margin:0;
-color:white;
 text-align:center;
 background:#020617;
-overflow-x:hidden;
+color:white;
+margin:0;
 }
 
-/* خلفية */
 #bgVideo{
 position:fixed;
-top:0;
-left:0;
 width:100%;
 height:100%;
 object-fit:cover;
@@ -31,38 +27,28 @@ background:#0f172a;
 margin:20px;
 padding:20px;
 border-radius:20px;
-box-shadow:0 0 20px #00eaff55;
-}
-
-input,select{
-padding:10px;
-border-radius:10px;
-border:none;
-margin:5px;
 }
 
 button{
-padding:10px 15px;
+padding:10px;
+margin:5px;
+background:#00eaff;
 border:none;
 border-radius:10px;
-background:#00eaff;
+}
+
+.circle{
+width:80px;
+height:80px;
+border-radius:50%;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+margin:10px;
+background:#1e293b;
 cursor:pointer;
 }
 
-#winner{
-font-size:25px;
-color:#00ffcc;
-}
-
-/* روبوت */
-#robot{
-position:fixed;
-bottom:20px;
-left:20px;
-font-size:50px;
-}
-
-/* قصاصات */
 .confetti{
 position:fixed;
 width:8px;
@@ -79,29 +65,16 @@ to{transform:translateY(100vh);}
 
 <body>
 
-<!-- فيديو خلفية -->
 <video id="bgVideo" autoplay muted loop></video>
 
-<h1>🤖 منصة بصمة الذكاء</h1>
+<h1>🤖 بصمة الذكاء</h1>
 
 <button onclick="startSound()">🔊 تشغيل الصوت</button>
 
-<!-- رفع خلفية -->
 <div class="box">
-<h3>🎬 الخلفية</h3>
 <input type="file" accept="video/*" onchange="setBG(event)">
 </div>
 
-<!-- البيانات -->
-<div class="box">
-<h3>البيانات الأساسية</h3>
-<input placeholder="اسم المدرسة">
-<input placeholder="اسم المعلمة">
-<input placeholder="المادة">
-<input placeholder="الصف">
-</div>
-
-<!-- الفصول -->
 <div class="box">
 <h3>الفصول</h3>
 <input id="classInput">
@@ -109,7 +82,6 @@ to{transform:translateY(100vh);}
 <div id="classes"></div>
 </div>
 
-<!-- المجموعات -->
 <div class="box">
 <h3>المجموعات</h3>
 <input id="groupInput">
@@ -117,15 +89,10 @@ to{transform:translateY(100vh);}
 <div id="groups"></div>
 </div>
 
-<!-- السؤال -->
 <div class="box">
 <h3>السؤال</h3>
 <input id="q"><br>
-
-<input id="a1">
-<input id="a2">
-<input id="a3">
-<input id="a4"><br>
+<input id="a1"><input id="a2"><input id="a3"><input id="a4"><br>
 
 <select id="correct">
 <option value="0">1</option>
@@ -138,72 +105,64 @@ to{transform:translateY(100vh);}
 <div id="answers"></div>
 </div>
 
-<button onclick="showWinner()">🏆 إعلان الفائز</button>
+<button onclick="showWinner()">🏆 الفائز</button>
 <div id="winner"></div>
 
-<div id="robot">🤖</div>
-
+<audio id="correctSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+<audio id="wrongSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
 <audio id="clap" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
 
 <script>
 
-/* الخلفية */
-let savedBG = localStorage.getItem("bgVideo");
-if(savedBG){
-bgVideo.src = savedBG;
-}
+/* خلفية */
+let bg=localStorage.getItem("bg");
+if(bg){bgVideo.src=bg;}
 
 function setBG(e){
-let file = e.target.files[0];
-if(!file) return;
-let url = URL.createObjectURL(file);
-bgVideo.src = url;
-localStorage.setItem("bgVideo", url);
+let url=URL.createObjectURL(e.target.files[0]);
+bgVideo.src=url;
+localStorage.setItem("bg",url);
 }
 
 /* بيانات */
-let classesData = JSON.parse(localStorage.getItem("classes")) || [];
-let groupsData = JSON.parse(localStorage.getItem("groups")) || [];
-let currentClass = localStorage.getItem("currentClass") || "";
+let classes=JSON.parse(localStorage.getItem("c"))||[];
+let groups=JSON.parse(localStorage.getItem("g"))||[];
+let currentClass=localStorage.getItem("cc")||"";
 
 /* حفظ */
 function save(){
-localStorage.setItem("classes",JSON.stringify(classesData));
-localStorage.setItem("groups",JSON.stringify(groupsData));
-localStorage.setItem("currentClass",currentClass);
+localStorage.setItem("c",JSON.stringify(classes));
+localStorage.setItem("g",JSON.stringify(groups));
+localStorage.setItem("cc",currentClass);
 render();
 }
 
 /* عرض */
 function render(){
 
-let cDiv = document.getElementById("classes");
-cDiv.innerHTML="";
-
-classesData.forEach((c,i)=>{
+classesDiv.innerHTML="";
+classes.forEach((c,i)=>{
 let d=document.createElement("div");
 d.innerHTML=(c===currentClass?"👉 ":"")+c+" ❌";
 
 d.onclick=()=>{currentClass=c;save();}
 d.ondblclick=()=>{
-classesData.splice(i,1);
-groupsData=groupsData.filter(g=>g.class!==c);
+classes.splice(i,1);
+groups=groups.filter(g=>g.class!==c);
 save();
 };
 
-cDiv.appendChild(d);
+classesDiv.appendChild(d);
 });
 
-let gDiv = document.getElementById("groups");
-gDiv.innerHTML="";
-
-groupsData.filter(g=>g.class===currentClass).forEach((g,i)=>{
+groupsDiv.innerHTML="";
+groups.filter(g=>g.class===currentClass).forEach((g,i)=>{
 
 let d=document.createElement("div");
 d.innerHTML=g.name+" ⭐ "+g.score+" ❌";
 
 d.onclick=()=>{
-groupsData.splice(groupsData.indexOf(g),1);
+groups.splice(groups.indexOf(g),1);
 save();
 };
 
@@ -212,7 +171,7 @@ g.score++;
 save();
 };
 
-gDiv.appendChild(d);
+groupsDiv.appendChild(d);
 });
 }
 
@@ -220,7 +179,7 @@ gDiv.appendChild(d);
 function addClass(){
 let v=classInput.value;
 if(!v)return;
-classesData.push(v);
+classes.push(v);
 if(!currentClass)currentClass=v;
 save();
 }
@@ -229,24 +188,44 @@ function addGroup(){
 if(!currentClass){alert("اختاري فصل");return;}
 let v=groupInput.value;
 if(!v)return;
-groupsData.push({name:v,score:0,class:currentClass});
+groups.push({name:v,score:0,class:currentClass});
 save();
+}
+
+/* خلط الإجابات */
+function shuffle(arr){
+return arr.sort(()=>Math.random()-0.5);
 }
 
 /* السؤال */
 function showQ(){
 answers.innerHTML="";
-let correctIndex=correct.value;
 
-[a1.value,a2.value,a3.value,a4.value].forEach((a,i)=>{
-let b=document.createElement("button");
-b.innerText=a;
+let arr=[
+{text:a1.value,correct:false},
+{text:a2.value,correct:false},
+{text:a3.value,correct:false},
+{text:a4.value,correct:false}
+];
+
+arr[correct.value].correct=true;
+
+arr=shuffle(arr);
+
+arr.forEach(a=>{
+let b=document.createElement("div");
+b.className="circle";
+b.innerText=a.text;
 
 b.onclick=()=>{
-if(i==correctIndex){
+if(a.correct){
 b.style.background="green";
+correctSound.play();
+speak("ممتاز إجابة صحيحة");
 }else{
 b.style.background="red";
+wrongSound.play();
+speak("حاولي مرة أخرى");
 }
 };
 
@@ -255,25 +234,28 @@ answers.appendChild(b);
 }
 
 /* صوت */
+function speak(t){
+let m=new SpeechSynthesisUtterance(t);
+m.lang="ar-SA";
+speechSynthesis.speak(m);
+}
+
 function startSound(){
-let msg=new SpeechSynthesisUtterance("مرحباً بكم في منصة بصمة الذكاء");
-msg.lang="ar-SA";
-speechSynthesis.speak(msg);
+speak("مرحباً بكم في بصمة الذكاء");
 }
 
 /* الفائز */
 function showWinner(){
-let gs=groupsData.filter(g=>g.class===currentClass);
+
+let gs=groups.filter(g=>g.class===currentClass);
 if(gs.length===0)return;
 
-let win=gs.reduce((a,b)=>a.score>b.score?a:b);
+let win=gs.reduce((a,b)=>a.score>=b.score?a:b);
 
 winner.innerHTML="🏆 "+win.name;
 
 clap.play();
-
-let msg=new SpeechSynthesisUtterance("الفريق الفائز هو "+win.name);
-speechSynthesis.speak(msg);
+speak("الفريق الفائز هو "+win.name);
 
 /* قصاصات */
 for(let i=0;i<40;i++){
@@ -291,4 +273,4 @@ render();
 </script>
 
 </body>
-</html> 
+</html>
