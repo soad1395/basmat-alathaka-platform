@@ -1,340 +1,731 @@
  <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>منصة بصمة الذكاء</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>منصة بصمة الذكاء</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      padding:0;
+      min-height:100%;
+      overflow-x:hidden;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      direction:rtl;
+      font-family:tahoma, Arial, sans-serif;
+      color:#fff;
+      text-align:center;
+      background:#020617;
+    }
 
-<style>
-body{
-direction:rtl;
-font-family:tahoma;
-margin:0;
-color:white;
-text-align:center;
-overflow:hidden;
-}
+    #bgVideo{
+      position:fixed;
+      top:0;
+      left:0;
+      width:100vw;
+      height:100vh;
+      object-fit:cover;
+      z-index:-2;
+      background:#020617;
+    }
 
-/* فيديو */
-#bg{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-object-fit:cover;
-z-index:-1;
-}
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(2,6,23,.45);
+      z-index:-1;
+      pointer-events:none;
+    }
 
-/* تصميم */
-.box{
-background:#0f172acc;
-margin:15px;
-padding:20px;
-border-radius:20px;
-}
+    h1{
+      margin:22px 10px 8px;
+      font-size:38px;
+      text-shadow:0 0 12px rgba(34,211,238,.45);
+    }
 
-button{
-background:#22d3ee;
-border:none;
-padding:10px 15px;
-border-radius:10px;
-margin:5px;
-cursor:pointer;
-}
+    .box{
+      width:min(980px,94%);
+      margin:16px auto;
+      padding:18px 16px;
+      border-radius:22px;
+      background:rgba(15,23,42,.80);
+      box-shadow:0 0 18px rgba(34,211,238,.18);
+      backdrop-filter: blur(2px);
+    }
 
-input,select{
-padding:10px;
-border-radius:10px;
-border:none;
-margin:5px;
-}
+    h2{
+      margin:0 0 14px;
+      font-size:26px;
+    }
 
-/* الدوائر */
-.circle{
-width:110px;
-height:110px;
-border-radius:50%;
-display:inline-flex;
-align-items:center;
-justify-content:center;
-margin:10px;
-background:#ef4444;
-cursor:pointer;
-}
+    .row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:center;
+      align-items:center;
+      margin:8px 0;
+    }
 
-.correct{background:#22c55e;}
-.wrong{background:#ef4444;}
+    input,select,button{
+      border:none;
+      border-radius:14px;
+      padding:11px 14px;
+      font-size:17px;
+      font-family:inherit;
+    }
 
-/* روبوت */
-#robot{
-position:fixed;
-bottom:15px;
-left:15px;
-font-size:35px;
-animation:move 2s infinite alternate;
-}
-@keyframes move{
-from{transform:translateY(0)}
-to{transform:translateY(-10px)}
-}
+    input,select{
+      min-width:210px;
+      background:#fff;
+      color:#111827;
+    }
 
-/* احتفال */
-#celebration{
-display:none;
-position:fixed;
-top:30%;
-left:0;
-right:0;
-background:#000000cc;
-padding:20px;
-border-radius:20px;
-font-size:25px;
-}
-</style>
+    button{
+      background:#22d3ee;
+      color:#062033;
+      cursor:pointer;
+      font-weight:700;
+    }
+
+    button:hover{filter:brightness(1.05)}
+
+    .danger{background:#ef4444;color:#fff}
+    .gold{background:#fbbf24;color:#3b2f00}
+    .success{background:#10b981;color:#fff}
+    .small{padding:8px 12px;font-size:15px}
+
+    .class-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      margin:6px;
+      padding:8px 10px;
+      border-radius:14px;
+      background:rgba(34,211,238,.16);
+      border:1px solid rgba(34,211,238,.34);
+    }
+
+    .active-chip{
+      box-shadow:0 0 0 2px #22d3ee inset;
+      background:rgba(34,211,238,.28);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:8px;
+    }
+
+    th,td{
+      padding:10px 6px;
+      text-align:center;
+      font-size:18px;
+    }
+
+    tbody tr{
+      border-top:1px solid rgba(255,255,255,.08);
+    }
+
+    .question-title{
+      font-size:30px;
+      font-weight:700;
+      margin:16px 0 10px;
+    }
+
+    .answers{
+      display:flex;
+      flex-wrap:wrap;
+      gap:18px;
+      justify-content:center;
+      margin-top:16px;
+    }
+
+    .circle{
+      width:150px;
+      height:150px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:14px;
+      background:#ef4444;
+      color:#fff;
+      box-shadow:0 0 18px rgba(34,211,238,.35);
+      cursor:pointer;
+      user-select:none;
+      font-size:24px;
+      line-height:1.35;
+      transition:.2s;
+    }
+
+    .circle:hover{transform:scale(1.03)}
+    .correct{background:#22c55e !important}
+    .wrong{background:#ef4444 !important}
+
+    #winnerPanel{
+      display:none;
+      margin-top:18px;
+      padding:18px;
+      border-radius:18px;
+      background:rgba(251,191,36,.12);
+      border:1px solid rgba(251,191,36,.45);
+    }
+
+    #winnerCup{
+      font-size:90px;
+      margin:6px 0;
+    }
+
+    #robot{
+      position:fixed;
+      left:14px;
+      bottom:14px;
+      font-size:62px;
+      filter:drop-shadow(0 0 10px rgba(34,211,238,.45));
+      animation:float 2.2s infinite alternate;
+      z-index:20;
+    }
+
+    @keyframes float{
+      from{transform:translateY(0)}
+      to{transform:translateY(-12px)}
+    }
+
+    .confetti{
+      position:fixed;
+      top:-20px;
+      width:10px;
+      height:18px;
+      z-index:9999;
+      animation:fall 3.4s linear forwards;
+      opacity:.95;
+    }
+
+    @keyframes fall{
+      to{
+        transform:translateY(110vh) rotate(720deg);
+      }
+    }
+
+    #scrollTopBtn{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      display:none;
+      z-index:30;
+    }
+
+    .note{
+      font-size:14px;
+      opacity:.9;
+      margin-top:6px;
+    }
+
+    @media (max-width:700px){
+      h1{font-size:32px}
+      .circle{
+        width:120px;
+        height:120px;
+        font-size:20px;
+      }
+      input,select,button{font-size:15px}
+      th,td{font-size:16px}
+    }
+  </style>
 </head>
-
 <body>
 
-<!-- فيديو -->
-<video id="bg" autoplay muted loop>
-<source src="https://www.w3schools.com/howto/rain.mp4">
-</video>
+  <video id="bgVideo" autoplay muted loop playsinline>
+    <source src="https://www.w3schools.com/howto/rain.mp4" type="video/mp4">
+  </video>
+  <div class="overlay"></div>
 
-<h1>🤖 منصة بصمة الذكاء</h1>
+  <h1>🤖 منصة بصمة الذكاء</h1>
 
-<label style="background:#22d3ee;padding:10px;border-radius:10px;cursor:pointer;">
-🎬 تغيير الخلفية
-<input type="file" accept="video/*" hidden onchange="setVideo(event)">
-</label>
+  <div class="box">
+    <div class="row">
+      <label style="background:#22d3ee;padding:11px 16px;border-radius:14px;cursor:pointer;color:#062033;font-weight:700;">
+        🎬 اختيار فيديو
+        <input type="file" id="videoFile" accept="video/*" hidden>
+      </label>
+      <button onclick="applyVideoFile()">تطبيق الفيديو</button>
+      <button onclick="playWelcome()">🔊 تشغيل الصوت</button>
+    </div>
+    <div class="note">إذا اخترتِ فيديو جديد يتغير مباشرة. وإذا لم تختاري سيظهر الفيديو الافتراضي.</div>
+  </div>
 
-<button onclick="speak('أهلاً بكم')">🔊 تشغيل الصوت</button>
+  <div class="box">
+    <h2>البيانات الأساسية</h2>
+    <div class="row">
+      <input id="teacherName" placeholder="اسم المعلمة">
+      <input id="schoolName" placeholder="اسم المدرسة">
+      <input id="subjectName" placeholder="المادة">
+      <input id="gradeName" placeholder="الصف">
+    </div>
+  </div>
 
-<!-- البيانات -->
-<div class="box">
-<h2>البيانات</h2>
-<input placeholder="اسم المعلمة">
-<input placeholder="اسم المدرسة">
-<input placeholder="المادة">
-<input placeholder="الصف">
-</div>
+  <div class="box">
+    <h2>الفصول</h2>
+    <div class="row">
+      <input id="classInput" placeholder="اسم الفصل">
+      <button onclick="addClass()">إضافة فصل</button>
+    </div>
+    <div id="classesList"></div>
+  </div>
 
-<!-- الفصول -->
-<div class="box">
-<h2>الفصول</h2>
-<input id="className" placeholder="اسم الفصل">
-<button onclick="addClass()">إضافة</button>
+  <div class="box">
+    <h2>المجموعات</h2>
+    <div class="row">
+      <input id="groupInput" placeholder="اسم المجموعة">
+      <button onclick="addGroup()">إضافة مجموعة</button>
+    </div>
 
-<div id="classList"></div>
-</div>
+    <div class="row">
+      <label>المجموعة التي ستجيب الآن:</label>
+      <select id="activeGroupSelect"></select>
+    </div>
 
-<!-- المجموعات -->
-<div class="box">
-<h2>المجموعات</h2>
-<input id="groupName" placeholder="اسم المجموعة">
-<button onclick="addGroup()">إضافة</button>
+    <table>
+      <thead>
+        <tr>
+          <th>حذف</th>
+          <th>+1</th>
+          <th>النقاط</th>
+          <th>المجموعة</th>
+          <th>الفصل الحالي</th>
+        </tr>
+      </thead>
+      <tbody id="groupsTable"></tbody>
+    </table>
+  </div>
 
-<br>
-<select id="activeGroup"></select>
+  <div class="box">
+    <h2>🎮 السؤال</h2>
+    <div class="row">
+      <input id="questionInput" placeholder="اكتب السؤال" style="min-width:360px">
+    </div>
 
-<div id="groups"></div>
-</div>
+    <div class="row">
+      <input id="answer1" placeholder="إجابة 1">
+      <input id="answer2" placeholder="إجابة 2">
+      <input id="answer3" placeholder="إجابة 3">
+      <input id="answer4" placeholder="إجابة 4">
+    </div>
 
-<!-- السؤال -->
-<div class="box">
-<h2>🎮 السؤال</h2>
+    <div class="row">
+      <select id="correctAnswer">
+        <option value="0">الإجابة الصحيحة 1</option>
+        <option value="1">الإجابة الصحيحة 2</option>
+        <option value="2">الإجابة الصحيحة 3</option>
+        <option value="3">الإجابة الصحيحة 4</option>
+      </select>
+      <button onclick="showQuestion()">عرض السؤال</button>
+    </div>
 
-<input id="question" placeholder="السؤال"><br>
+    <div id="shownQuestion" class="question-title"></div>
+    <div id="answersBox" class="answers"></div>
+  </div>
 
-<input id="a1" placeholder="1">
-<input id="a2" placeholder="2"><br>
-<input id="a3" placeholder="3">
-<input id="a4" placeholder="4"><br>
+  <div class="box">
+    <button class="gold" onclick="announceWinner()">🏆 إعلان الفائز</button>
+    <div id="winnerPanel">
+      <div id="winnerCup">🏆</div>
+      <h2 id="winnerText"></h2>
+      <div style="font-size:30px">🎉 مبروك 🎉</div>
+    </div>
+  </div>
 
-<select id="correct">
-<option value="0">1</option>
-<option value="1">2</option>
-<option value="2">3</option>
-<option value="3">4</option>
-</select>
+  <div id="robot">🤖✨</div>
+  <button id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">⬆️</button>
 
-<br>
-<button onclick="showQ()">عرض السؤال</button>
+  <script>
+    const STORAGE_KEY = "basmat_ai_final_all_in_one_v2";
 
-<div id="qBox"></div>
-</div>
+    let state = {
+      basic: {
+        teacherName:"",
+        schoolName:"",
+        subjectName:"",
+        gradeName:""
+      },
+      classes: [],
+      currentClass: "",
+      groups: [],              // أسماء المجموعات ثابتة لكل الفصول
+      scores: {},              // scores[className][groupName] = points
+      videoDataUrl: "",        // فيديو محلي مختار
+      question: {
+        text:"",
+        answers:["","","",""],
+        correct:0
+      }
+    };
 
-<button onclick="winner()">🏆 إعلان الفائز</button>
-<h2 id="result"></h2>
+    function loadState(){
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if(saved){
+        try{ state = JSON.parse(saved); }catch(e){}
+      }
+      if(!state.basic) state.basic = {teacherName:"",schoolName:"",subjectName:"",gradeName:""};
+      if(!Array.isArray(state.classes)) state.classes = [];
+      if(!Array.isArray(state.groups)) state.groups = [];
+      if(!state.scores || typeof state.scores !== "object") state.scores = {};
+      if(!state.question) state.question = {text:"",answers:["","","",""],correct:0};
+    }
 
-<div id="celebration">
-🏆🎉🎉🎉  
-<h2 id="winnerName"></h2>
-🎉🎉🎉
-</div>
+    function saveState(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
 
-<div id="robot">🤖✨</div>
+    function ensureScores(){
+      state.classes.forEach(cls=>{
+        if(!state.scores[cls]) state.scores[cls] = {};
+        state.groups.forEach(g=>{
+          if(typeof state.scores[cls][g] !== "number"){
+            state.scores[cls][g] = 0;
+          }
+        });
+      });
+    }
 
-<script>
+    function fillBasics(){
+      teacherName.value = state.basic.teacherName || "";
+      schoolName.value = state.basic.schoolName || "";
+      subjectName.value = state.basic.subjectName || "";
+      gradeName.value = state.basic.gradeName || "";
+    }
 
-let data = JSON.parse(localStorage.getItem("AI")) || {};
-let currentClass = "";
+    function saveBasics(){
+      state.basic.teacherName = teacherName.value;
+      state.basic.schoolName = schoolName.value;
+      state.basic.subjectName = subjectName.value;
+      state.basic.gradeName = gradeName.value;
+      saveState();
+    }
 
-/* حفظ */
-function save(){
-localStorage.setItem("AI", JSON.stringify(data));
-}
+    ["teacherName","schoolName","subjectName","gradeName"].forEach(id=>{
+      document.addEventListener("DOMContentLoaded",()=>{
+        document.getElementById(id).addEventListener("input", saveBasics);
+      });
+    });
 
-/* فيديو */
-function setVideo(e){
-bg.src = URL.createObjectURL(e.target.files[0]);
-}
+    function addClass(){
+      const name = classInput.value.trim();
+      if(!name) return;
+      if(!state.classes.includes(name)){
+        state.classes.push(name);
+        state.scores[name] = state.scores[name] || {};
+        state.groups.forEach(g=> state.scores[name][g] = state.scores[name][g] || 0);
+      }
+      state.currentClass = name;
+      classInput.value = "";
+      saveState();
+      renderAll();
+      robotSpeak("تمت إضافة فصل");
+    }
 
-/* صوت */
-function speak(text){
-let msg = new SpeechSynthesisUtterance(text);
-msg.lang="ar-SA";
-speechSynthesis.speak(msg);
-}
+    function selectClass(name){
+      state.currentClass = name;
+      saveState();
+      renderAll();
+      robotSpeak("تم اختيار الفصل");
+    }
 
-/* فصول */
-function addClass(){
-let c = className.value;
-if(!data[c]) data[c]={};
+    function deleteClass(name){
+      state.classes = state.classes.filter(c=>c!==name);
+      delete state.scores[name];
+      if(state.currentClass === name){
+        state.currentClass = state.classes[0] || "";
+      }
+      saveState();
+      renderAll();
+    }
 
-currentClass = c;
-save();
-showClasses();
-show();
-}
+    function addGroup(){
+      const name = groupInput.value.trim();
+      if(!name) return;
+      if(!state.groups.includes(name)){
+        state.groups.push(name);
+        state.classes.forEach(cls=>{
+          state.scores[cls] = state.scores[cls] || {};
+          state.scores[cls][name] = 0;
+        });
+      }
+      groupInput.value = "";
+      saveState();
+      renderAll();
+      robotSpeak("تمت إضافة مجموعة");
+    }
 
-function showClasses(){
-classList.innerHTML="";
+    function deleteGroup(groupName){
+      state.groups = state.groups.filter(g=>g!==groupName);
+      Object.keys(state.scores).forEach(cls=>{
+        delete state.scores[cls][groupName];
+      });
+      saveState();
+      renderAll();
+    }
 
-for(let c in data){
-classList.innerHTML += `
-<div class="box">
-${c}
-<button onclick="selectClass('${c}')">اختيار</button>
-<button onclick="deleteClass('${c}')">❌</button>
-</div>
-`;
-}
-}
+    function addPoint(groupName){
+      if(!state.currentClass){
+        alert("اختاري فصل أول");
+        return;
+      }
+      ensureScores();
+      state.scores[state.currentClass][groupName] = (state.scores[state.currentClass][groupName] || 0) + 1;
+      saveState();
+      renderGroupsTable();
+      playBeep(760,0.14);
+      robotSpeak("أحسنت");
+    }
 
-function selectClass(c){
-currentClass = c;
-show();
-}
+    function renderClasses(){
+      classesList.innerHTML = "";
+      state.classes.forEach(cls=>{
+        const item = document.createElement("div");
+        item.className = "class-chip" + (state.currentClass === cls ? " active-chip" : "");
+        item.innerHTML = `
+          <button class="small" onclick="selectClass('${escapeJs(cls)}')">${cls}</button>
+          <button class="small danger" onclick="deleteClass('${escapeJs(cls)}')">❌</button>
+        `;
+        classesList.appendChild(item);
+      });
+    }
 
-function deleteClass(c){
-delete data[c];
-save();
-showClasses();
-}
+    function renderActiveGroupSelect(){
+      activeGroupSelect.innerHTML = '<option value="">اختر المجموعة</option>';
+      state.groups.forEach(g=>{
+        const op = document.createElement("option");
+        op.value = g;
+        op.textContent = g;
+        activeGroupSelect.appendChild(op);
+      });
+    }
 
-/* مجموعات */
-function addGroup(){
-let g = groupName.value;
+    function renderGroupsTable(){
+      groupsTable.innerHTML = "";
+      if(!state.currentClass){
+        groupsTable.innerHTML = `<tr><td colspan="5">اختاري فصل أول</td></tr>`;
+        return;
+      }
 
-for(let c in data){
-data[c][g] = data[c][g] || 0;
-}
+      ensureScores();
 
-save();
-show();
-}
+      state.groups.forEach(groupName=>{
+        const tr = document.createElement("tr");
+        const pts = state.scores[state.currentClass][groupName] || 0;
+        tr.innerHTML = `
+          <td><button class="small danger" onclick="deleteGroup('${escapeJs(groupName)}')">🗑</button></td>
+          <td><button class="small" onclick="addPoint('${escapeJs(groupName)}')">+1</button></td>
+          <td>${pts}</td>
+          <td>${groupName}</td>
+          <td>${state.currentClass}</td>
+        `;
+        groupsTable.appendChild(tr);
+      });
 
-/* عرض */
-function show(){
-groups.innerHTML="";
-activeGroup.innerHTML="<option>اختر المجموعة</option>";
+      renderActiveGroupSelect();
+    }
 
-for(let g in data[currentClass]){
-groups.innerHTML += `
-<div class="box">
-${g} ⭐ ${data[currentClass][g]}
-<button onclick="addPoint('${g}')">+1</button>
-</div>
-`;
+    function showQuestion(){
+      const q = questionInput.value.trim();
+      const answers = [
+        answer1.value.trim(),
+        answer2.value.trim(),
+        answer3.value.trim(),
+        answer4.value.trim()
+      ];
+      const correctIndex = parseInt(correctAnswer.value,10);
 
-activeGroup.innerHTML += `<option value="${g}">${g}</option>`;
-}
-}
+      if(!q || answers.some(a=>!a)){
+        alert("اكتبي السؤال وجميع الإجابات");
+        return;
+      }
 
-/* نقاط */
-function addPoint(g){
-data[currentClass][g]++;
-save();
-show();
-speak("أحسنت");
-}
+      state.question = {
+        text: q,
+        answers,
+        correct: correctIndex
+      };
+      saveState();
 
-/* سؤال */
-function showQ(){
+      shownQuestion.textContent = q;
+      answersBox.innerHTML = "";
 
-if(!a1.value||!a2.value||!a3.value||!a4.value){
-alert("اكتب الإجابات");
-return;
-}
+      answers.forEach((ans, idx)=>{
+        const d = document.createElement("div");
+        d.className = "circle";
+        d.textContent = ans;
+        d.onclick = ()=>checkAnswer(idx);
+        answersBox.appendChild(d);
+      });
 
-let arr=[a1.value,a2.value,a3.value,a4.value];
-let c=correct.value;
+      robotSpeak(q);
+    }
 
-qBox.innerHTML=`<h3>${question.value}</h3>`;
+    function restoreQuestion(){
+      questionInput.value = state.question.text || "";
+      answer1.value = state.question.answers?.[0] || "";
+      answer2.value = state.question.answers?.[1] || "";
+      answer3.value = state.question.answers?.[2] || "";
+      answer4.value = state.question.answers?.[3] || "";
+      correctAnswer.value = String(state.question.correct || 0);
 
-arr.forEach((ans,i)=>{
-qBox.innerHTML+=`
-<div class="circle" onclick="check(${i},${c})">${ans}</div>
-`;
-});
-}
+      if(state.question.text && state.question.answers?.some(a=>a)){
+        shownQuestion.textContent = state.question.text;
+        answersBox.innerHTML = "";
+        state.question.answers.forEach((ans, idx)=>{
+          const d = document.createElement("div");
+          d.className = "circle";
+          d.textContent = ans;
+          d.onclick = ()=>checkAnswer(idx);
+          answersBox.appendChild(d);
+        });
+      }
+    }
 
-/* تحقق */
-function check(i,c){
+    function checkAnswer(index){
+      const circles = [...document.querySelectorAll(".circle")];
+      circles.forEach(c=>c.classList.remove("correct","wrong"));
 
-let circles=document.querySelectorAll(".circle");
-circles.forEach(el=>el.classList.remove("correct","wrong"));
+      const selectedGroup = activeGroupSelect.value;
+      if(!selectedGroup){
+        alert("اختاري المجموعة التي ستجيب أول");
+        return;
+      }
 
-if(i==c){
-circles[i].classList.add("correct");
+      if(index === state.question.correct){
+        circles[index].classList.add("correct");
+        addPoint(selectedGroup);
+        playBeep(860,0.16);
+        robotSpeak("إجابة صحيحة ممتاز");
+      }else{
+        circles[index].classList.add("wrong");
+        playBeep(260,0.16);
+        robotSpeak("حاولي مرة أخرى");
+      }
+    }
 
-let g=activeGroup.value;
+    function announceWinner(){
+      if(!state.currentClass){
+        alert("اختاري فصل أول");
+        return;
+      }
+      ensureScores();
+      const scoreMap = state.scores[state.currentClass] || {};
+      const entries = state.groups.map(g=>({name:g, points: scoreMap[g] || 0}));
+      if(!entries.length){
+        alert("لا توجد مجموعات");
+        return;
+      }
 
-if(!g){alert("اختاري مجموعة");return;}
+      const max = Math.max(...entries.map(e=>e.points));
+      if(max <= 0){
+        alert("لا يوجد فائز لأن النقاط صفر");
+        return;
+      }
 
-data[currentClass][g]++;
-save();
-show();
+      const winners = entries.filter(e=>e.points === max).map(e=>e.name);
+      const names = winners.join(" و ");
 
-speak("إجابة صحيحة");
+      winnerPanel.style.display = "block";
+      winnerText.textContent = `الفائز في ${state.currentClass}: ${names} (${max} نقطة)`;
 
-}else{
-circles[i].classList.add("wrong");
-}
-}
+      robotSpeak("الفريق الفائز هو " + names);
+      celebrate();
+    }
 
-/* فائز */
-function winner(){
-let max=-1,win="";
+    function celebrate(){
+      playBeep(950,0.12);
+      setTimeout(()=>playBeep(1050,0.12),130);
+      setTimeout(()=>playBeep(1150,0.12),260);
 
-for(let g in data[currentClass]){
-if(data[currentClass][g]>max){
-max=data[currentClass][g];
-win=g;
-}
-}
+      for(let i=0;i<60;i++){
+        const c = document.createElement("div");
+        c.className = "confetti";
+        c.style.left = (Math.random()*100) + "vw";
+        c.style.background = `hsl(${Math.random()*360},100%,55%)`;
+        c.style.animationDuration = (2.1 + Math.random()*1.9) + "s";
+        c.style.transform = `rotate(${Math.random()*360}deg)`;
+        document.body.appendChild(c);
+        setTimeout(()=>c.remove(),4300);
+      }
+    }
 
-result.innerHTML="🏆 "+win;
+    function applyVideoFile(){
+      const file = videoFile.files[0];
+      if(!file) return;
 
-celebration.style.display="block";
-winnerName.innerText=win;
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        state.videoDataUrl = ev.target.result;
+        saveState();
+        renderVideo();
+      };
+      reader.readAsDataURL(file);
+    }
 
-speak("الفائز هو "+win);
-}
+    function renderVideo(){
+      if(state.videoDataUrl){
+        bgVideo.src = state.videoDataUrl;
+      }
+    }
 
-showClasses();
+    function playWelcome(){
+      robotSpeak("مرحباً بكم في منصة بصمة الذكاء");
+    }
 
-</script>
+    function robotSpeak(text){
+      try{
+        speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = "ar-SA";
+        msg.rate = 1;
+        speechSynthesis.speak(msg);
+      }catch(e){}
+    }
 
+    function playBeep(freq, seconds){
+      try{
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new Ctx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.value = 0.05;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        setTimeout(()=>{
+          osc.stop();
+          ctx.close();
+        }, seconds*1000);
+      }catch(e){}
+    }
+
+    function escapeJs(str){
+      return String(str).replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+    }
+
+    window.addEventListener("scroll", ()=>{
+      scrollTopBtn.style.display = window.scrollY > 160 ? "block" : "none";
+    });
+
+    function renderAll(){
+      ensureScores();
+      fillBasics();
+      renderVideo();
+      renderClasses();
+      renderGroupsTable();
+      restoreQuestion();
+    }
+
+    loadState();
+    renderAll();
+  </script>
 </body>
 </html>
