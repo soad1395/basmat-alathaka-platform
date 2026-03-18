@@ -1,4 +1,337 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>منصة بصمة الذكاء</title>
+
+<style>
+body{
+direction:rtl;
+font-family:tahoma;
+margin:0;
+color:white;
+text-align:center;
+background:#020617;
+overflow:hidden;
+}
+
+/* خلفية نيون */
+body::before{
+content:"";
+position:fixed;
+width:200%;
+height:200%;
+background:radial-gradient(circle,#00eaff33 2px,transparent 2px);
+background-size:80px 80px;
+animation:move 40s linear infinite;
+z-index:-2;
+}
+@keyframes move{
+100%{transform:translate(200px,200px)}
+}
+
+.box{
+background:#0f172a;
+margin:20px;
+padding:20px;
+border-radius:20px;
+box-shadow:0 0 20px #00eaff55;
+}
+
+input,select{
+padding:10px;
+margin:5px;
+border-radius:10px;
+border:none;
+}
+
+button{
+padding:10px 15px;
+border:none;
+border-radius:10px;
+background:#00eaff;
+cursor:pointer;
+}
+
+.circle{
+width:80px;
+height:80px;
+border-radius:50%;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+margin:10px;
+background:#1e293b;
+cursor:pointer;
+}
+
+.correct{background:green;}
+.wrong{background:red;}
+
+#bgVideo,#bgImage{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+object-fit:cover;
+z-index:-5;
+}
+
+#robot{
+position:fixed;
+bottom:20px;
+left:20px;
+font-size:60px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🤖 منصة بصمة الذكاء</h1>
+
+<!-- رفع خلفية -->
+<input type="file" accept="video/*,image/*" onchange="changeBg(event)">
+
+<!-- البيانات -->
+<div class="box">
+<h3>البيانات الأساسية</h3>
+<input placeholder="اسم المدرسة">
+<input placeholder="اسم المعلمة">
+<input placeholder="المادة">
+<input placeholder="الصف">
+</div>
+
+<!-- الفصول -->
+<div class="box">
+<h3>الفصول</h3>
+<input id="className">
+<button onclick="addClass()">إضافة</button>
+<div id="classes"></div>
+</div>
+
+<!-- المجموعات -->
+<div class="box">
+<h3>المجموعات</h3>
+<input id="groupName">
+<select id="groupClass"></select>
+<button onclick="addGroup()">إضافة</button>
+<div id="groups"></div>
+</div>
+
+<!-- السؤال -->
+<div class="box">
+<h3>السؤال</h3>
+<input id="q"><br>
+<input id="a1"><input id="a2"><input id="a3"><input id="a4"><br>
+
+<select id="correct">
+<option value="0">1</option>
+<option value="1">2</option>
+<option value="2">3</option>
+<option value="3">4</option>
+</select>
+
+<button onclick="showQ()">عرض</button>
+<div id="answers"></div>
+</div>
+
+<button onclick="winner()">🏆 إعلان الفائز</button>
+
+<div id="robot">🤖</div>
+
+<script>
+
+/* عناصر */
+const classesDiv = document.getElementById("classes");
+const groupClass = document.getElementById("groupClass");
+const groupsDiv = document.getElementById("groups");
+const answersDiv = document.getElementById("answers");
+
+const className = document.getElementById("className");
+const groupName = document.getElementById("groupName");
+
+const q = document.getElementById("q");
+const a1 = document.getElementById("a1");
+const a2 = document.getElementById("a2");
+const a3 = document.getElementById("a3");
+const a4 = document.getElementById("a4");
+const correct = document.getElementById("correct");
+
+/* بيانات */
+let classes=[];
+let groups=[];
+let scores={};
+let correctAnswer=0;
+
+/* روبوت */
+function speak(t){
+let msg=new SpeechSynthesisUtterance(t);
+msg.lang="ar-SA";
+speechSynthesis.speak(msg);
+}
+
+/* صوت بداية */
+document.addEventListener("click",()=>{
+speak("مرحباً بكم في عالم الذكاء");
+},{once:true});
+
+/* خلفية */
+function changeBg(e){
+let file=e.target.files[0];
+if(!file) return;
+
+let url=URL.createObjectURL(file);
+document.getElementById("bgVideo")?.remove();
+document.getElementById("bgImage")?.remove();
+
+if(file.type.startsWith("video")){
+let v=document.createElement("video");
+v.id="bgVideo";
+v.src=url;
+v.autoplay=true;
+v.loop=true;
+v.muted=true;
+document.body.appendChild(v);
+}else{
+let i=document.createElement("img");
+i.id="bgImage";
+i.src=url;
+document.body.appendChild(i);
+}
+}
+
+/* الفصول */
+function addClass(){
+let n=className.value.trim();
+if(!n) return;
+classes.push(n);
+renderClasses();
+className.value="";
+}
+
+function deleteClass(i){
+classes.splice(i,1);
+renderClasses();
+}
+
+function renderClasses(){
+classesDiv.innerHTML="";
+groupClass.innerHTML="";
+classes.forEach((c,i)=>{
+classesDiv.innerHTML+=`<p>${c} <button onclick="deleteClass(${i})">❌</button></p>`;
+groupClass.innerHTML+=`<option>${c}</option>`;
+});
+}
+
+/* المجموعات */
+function addGroup(){
+let n=groupName.value.trim();
+let cls=groupClass.value;
+if(!n) return;
+groups.push({name:n,cls});
+scores[n]=0;
+renderGroups();
+groupName.value="";
+}
+
+function deleteGroup(i){
+delete scores[groups[i].name];
+groups.splice(i,1);
+renderGroups();
+}
+
+function addPoint(n){
+scores[n]++;
+renderGroups();
+}
+
+function renderGroups(){
+groupsDiv.innerHTML="";
+groups.forEach((g,i)=>{
+groupsDiv.innerHTML+=`
+<p>${g.name} (${g.cls}) ⭐ ${scores[g.name]}
+<button onclick="addPoint('${g.name}')">+</button>
+<button onclick="deleteGroup(${i})">❌</button>
+</p>`;
+});
+}
+
+/* السؤال */
+function showQ(){
+correctAnswer=parseInt(correct.value);
+
+let arr=[a1.value,a2.value,a3.value,a4.value];
+
+answersDiv.innerHTML="";
+
+arr.forEach((a,i)=>{
+answersDiv.innerHTML+=`
+<div class="circle" onclick="check(${i},this)">
+${a}
+</div>`;
+});
+
+speak(q.value);
+}
+
+/* تحقق */
+function check(i,el){
+document.querySelectorAll(".circle").forEach(c=>c.classList.remove("correct","wrong"));
+
+if(i===correctAnswer){
+el.classList.add("correct");
+beep(800);
+}else{
+el.classList.add("wrong");
+beep(200);
+}
+}
+
+/* صوت */
+function beep(f){
+let ctx=new AudioContext();
+let o=ctx.createOscillator();
+o.connect(ctx.destination);
+o.frequency.value=f;
+o.start();
+setTimeout(()=>o.stop(),200);
+}
+
+/* الفائز */
+function winner(){
+let max=0,win="";
+for(let g in scores){
+if(scores[g]>max){
+max=scores[g];
+win=g;
+}
+}
+
+if(!win) return alert("لا يوجد نقاط");
+
+speak("الفريق الفائز "+win);
+new Audio("https://assets.mixkit.co/sfx/preview/mixkit-crowd-cheer-2050.mp3").play();
+
+/* احتفال */
+for(let i=0;i<40;i++){
+let s=document.createElement("span");
+s.innerHTML="🎉";
+s.style.position="fixed";
+s.style.left=Math.random()*100+"%";
+s.style.top=Math.random()*100+"%";
+document.body.appendChild(s);
+setTimeout(()=>s.remove(),2000);
+}
+
+alert("🏆 الفائز: "+win);
+}
+
+</script>
+
+</body>
+</html> <!DOCTYPE html>
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
