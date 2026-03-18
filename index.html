@@ -16,8 +16,10 @@ overflow:hidden;
 
 #bg{
 position:fixed;
-width:100%;
-height:100%;
+top:0;
+left:0;
+width:100vw;
+height:100vh;
 object-fit:cover;
 z-index:-1;
 }
@@ -46,8 +48,8 @@ margin:5px;
 }
 
 .circle{
-width:120px;
-height:120px;
+width:110px;
+height:110px;
 border-radius:50%;
 display:inline-flex;
 align-items:center;
@@ -59,18 +61,29 @@ cursor:pointer;
 
 .correct{background:green;}
 .wrong{background:red;}
+
+#celebration{
+display:none;
+position:fixed;
+top:30%;
+left:0;
+right:0;
+font-size:30px;
+}
 </style>
 </head>
 
 <body>
 
-<video id="bg" autoplay muted loop></video>
+<!-- فيديو -->
+<video id="bg" autoplay muted loop playsinline></video>
 
 <h1>🤖 منصة بصمة الذكاء</h1>
 
 <input type="file" onchange="setVideo(event)">
 <button onclick="speak('أهلاً بكم')">تشغيل الصوت</button>
 
+<!-- البيانات -->
 <div class="box">
 <h2>البيانات الأساسية</h2>
 <input placeholder="اسم المعلمة">
@@ -79,12 +92,14 @@ cursor:pointer;
 <input placeholder="الصف">
 </div>
 
+<!-- الفصل -->
 <div class="box">
 <h2>الفصل</h2>
 <input id="className" placeholder="اسم الفصل">
 <button onclick="setClass()">اختيار</button>
 </div>
 
+<!-- المجموعات -->
 <div class="box">
 <h2>المجموعات</h2>
 <input id="groupName" placeholder="اسم المجموعة">
@@ -93,11 +108,11 @@ cursor:pointer;
 <div id="groups"></div>
 </div>
 
+<!-- السؤال -->
 <div class="box">
 <h2>🎮 السؤال</h2>
 
-<input id="question" placeholder="السؤال">
-<br>
+<input id="question" placeholder="السؤال"><br>
 
 <input id="a1" placeholder="1">
 <input id="a2" placeholder="2"><br>
@@ -117,8 +132,16 @@ cursor:pointer;
 <div id="qBox"></div>
 </div>
 
+<!-- الفائز -->
 <button onclick="winner()">🏆 إعلان الفائز</button>
 <h2 id="result"></h2>
+
+<!-- احتفال -->
+<div id="celebration">
+🏆🎉🎉🎉  
+<h2 id="winnerName"></h2>
+🎉🎉🎉
+</div>
 
 <script>
 
@@ -196,7 +219,7 @@ new Audio("https://www.soundjay.com/buttons/button-3.mp3").play();
 speak("أحسنت");
 }
 
-// ===== السؤال =====
+// ===== عرض السؤال =====
 function showQ(){
 let q = question.value;
 let arr = [a1.value,a2.value,a3.value,a4.value];
@@ -220,7 +243,7 @@ circles.forEach(el=>el.classList.remove("correct","wrong"));
 if(i == c){
 circles[i].classList.add("correct");
 
-// أول مجموعة (تقدري تغيريها)
+// أول مجموعة
 let g = Object.keys(data[currentClass])[0];
 
 data[currentClass][g]++;
@@ -248,6 +271,11 @@ win = g;
 
 result.innerHTML="🏆 "+win;
 
+// احتفال
+celebration.style.display="block";
+winnerName.innerText = win;
+
+// صوت
 new Audio("https://www.soundjay.com/human/applause-8.mp3").play();
 speak("الفائز هو " + win);
 }
