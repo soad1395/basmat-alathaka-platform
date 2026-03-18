@@ -1,37 +1,26 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>بصمة الذكاء</title>
+<title>منصة بصمة الذكاء</title>
 
 <style>
 body{
 direction:rtl;
 font-family:tahoma;
 margin:0;
-color:white;
 text-align:center;
-overflow:hidden;
+color:white;
+background:#020617;
 }
 
-/* فيديو */
-#bg{
-position:fixed;
-width:100%;
-height:100%;
-object-fit:cover;
-z-index:-1;
-}
-
-/* صندوق */
 .box{
-background:#0f172acc;
+background:#0f172a;
 margin:20px;
 padding:20px;
 border-radius:20px;
 }
 
-/* أزرار */
 button{
 padding:8px 12px;
 margin:5px;
@@ -40,78 +29,40 @@ border:none;
 border-radius:10px;
 cursor:pointer;
 }
-
-/* قصاصات */
-.confetti{
-position:fixed;
-width:8px;
-height:8px;
-top:-10px;
-animation:fall 3s linear;
-}
-
-@keyframes fall{
-to{transform:translateY(100vh);}
-}
 </style>
 </head>
 
 <body>
 
-<video id="bg" autoplay muted loop></video>
-
-<h1>🤖 بصمة الذكاء</h1>
-
-<input type="file" accept="video/*" onchange="setVideo(event)">
-<button onclick="welcome()">🔊 تشغيل الصوت</button>
+<h1>🤖 منصة بصمة الذكاء</h1>
 
 <div class="box">
-<input id="className" placeholder="اسم الفصل">
+<input id="classInput" placeholder="اسم الفصل">
 <button onclick="setClass()">اختيار الفصل</button>
 </div>
 
 <div class="box">
-<input id="groupName" placeholder="اسم المجموعة">
+<input id="groupInput" placeholder="اسم المجموعة">
 <button onclick="addGroup()">إضافة مجموعة</button>
 <div id="groups"></div>
 </div>
 
-<button onclick="winner()">🏆 إعلان الفائز</button>
+<button onclick="showWinner()">🏆 إعلان الفائز</button>
 
 <h2 id="result"></h2>
 
 <script>
 
-// ===== التخزين =====
-let DB = JSON.parse(localStorage.getItem("AI_DB") || "{}");
+let DB = JSON.parse(localStorage.getItem("DB") || "{}");
 let currentClass = localStorage.getItem("CLASS") || "";
 
-// ===== فيديو =====
-function setVideo(e){
-let url = URL.createObjectURL(e.target.files[0]);
-bg.src = url;
-localStorage.setItem("video", url);
-}
-if(localStorage.getItem("video")){
-bg.src = localStorage.getItem("video");
-}
-
-// ===== صوت دخول =====
-function welcome(){
-let msg = new SpeechSynthesisUtterance("مرحباً بكم في عالم الذكاء");
-msg.lang="ar-SA";
-speechSynthesis.speak(msg);
-}
-
-// ===== حفظ =====
 function save(){
-localStorage.setItem("AI_DB", JSON.stringify(DB));
+localStorage.setItem("DB", JSON.stringify(DB));
 localStorage.setItem("CLASS", currentClass);
 }
 
-// ===== اختيار فصل =====
 function setClass(){
-currentClass = className.value;
+currentClass = classInput.value;
 
 if(!DB[currentClass]){
 DB[currentClass] = [];
@@ -121,9 +72,8 @@ save();
 render();
 }
 
-// ===== إضافة مجموعة (مشتركة لكل الفصول) =====
 function addGroup(){
-let name = groupName.value;
+let name = groupInput.value;
 if(!name) return;
 
 Object.keys(DB).forEach(cls=>{
@@ -140,17 +90,12 @@ save();
 render();
 }
 
-// ===== نقاط =====
 function addPoint(i){
 DB[currentClass][i].score++;
 save();
 render();
-
-// صوت
-new Audio("https://www.soundjay.com/buttons/button-4.mp3").play();
 }
 
-// ===== حذف =====
 function removeGroup(i){
 Object.keys(DB).forEach(cls=>{
 DB[cls].splice(i,1);
@@ -159,7 +104,6 @@ save();
 render();
 }
 
-// ===== عرض =====
 function render(){
 groups.innerHTML="";
 
@@ -176,8 +120,7 @@ groups.innerHTML+=`
 });
 }
 
-// ===== فائز =====
-function winner(){
+function showWinner(){
 let list = DB[currentClass];
 if(!list) return;
 
@@ -187,27 +130,8 @@ let win = list.filter(g=>g.score==max);
 let names = win.map(w=>w.name).join(" و ");
 
 result.innerHTML="🏆 "+names;
-
-// صوت
-new Audio("https://www.soundjay.com/human/applause-8.mp3").play();
-
-// روبوت
-let msg=new SpeechSynthesisUtterance("الفائز هو "+names);
-msg.lang="ar-SA";
-speechSynthesis.speak(msg);
-
-// قصاصات
-for(let i=0;i<40;i++){
-let c=document.createElement("div");
-c.className="confetti";
-c.style.left=Math.random()*100+"%";
-c.style.background=`hsl(${Math.random()*360},100%,50%)`;
-document.body.appendChild(c);
-setTimeout(()=>c.remove(),3000);
-}
 }
 
-// ===== تشغيل =====
 render();
 
 </script>
