@@ -41,7 +41,8 @@ margin:5px;
 }
 
 button{
-padding:10px 15px;
+padding:5px 10px;
+margin:5px;
 border:none;
 border-radius:10px;
 background:#00eaff;
@@ -167,7 +168,9 @@ render();
 /* عرض */
 function render(){
 
-document.getElementById("classes").innerHTML="";
+let cDiv=document.getElementById("classes");
+cDiv.innerHTML="";
+
 classes.forEach((c,i)=>{
 let d=document.createElement("div");
 d.innerHTML=(c===currentClass?"👉 ":"")+c+" ❌";
@@ -179,26 +182,25 @@ groups=groups.filter(g=>g.class!==c);
 save();
 };
 
-document.getElementById("classes").appendChild(d);
+cDiv.appendChild(d);
 });
 
-document.getElementById("groups").innerHTML="";
-groups.filter(g=>g.class===currentClass).forEach((g,i)=>{
+let gDiv=document.getElementById("groups");
+gDiv.innerHTML="";
+
+let filtered=groups.filter(g=>g.class===currentClass);
+
+filtered.forEach((g,i)=>{
 
 let d=document.createElement("div");
-d.innerHTML=g.name+" ⭐ "+g.score+" ❌";
 
-d.onclick=()=>{
-groups.splice(groups.indexOf(g),1);
-save();
-};
+d.innerHTML = `
+${g.name} ⭐ ${g.score}
+<button onclick="addPoint(${i})">+1</button>
+<button onclick="deleteGroup(${i})">❌</button>
+`;
 
-d.ondblclick=()=>{
-g.score++;
-save();
-};
-
-document.getElementById("groups").appendChild(d);
+gDiv.appendChild(d);
 });
 }
 
@@ -216,6 +218,22 @@ if(!currentClass){alert("اختاري فصل");return;}
 let v=groupInput.value;
 if(!v)return;
 groups.push({name:v,score:0,class:currentClass});
+save();
+}
+
+/* نقاط */
+function addPoint(i){
+let filtered=groups.filter(g=>g.class===currentClass);
+let g=filtered[i];
+g.score++;
+save();
+}
+
+/* حذف */
+function deleteGroup(i){
+let filtered=groups.filter(g=>g.class===currentClass);
+let g=filtered[i];
+groups.splice(groups.indexOf(g),1);
 save();
 }
 
@@ -270,7 +288,7 @@ function startSound(){
 speak("مرحباً بكم في منصة بصمة الذكاء");
 }
 
-/* الفائز (حسب أعلى نقاط فقط) */
+/* الفائز */
 function showWinner(){
 
 let gs = groups.filter(g=>g.class === currentClass);
