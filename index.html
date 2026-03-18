@@ -11,12 +11,13 @@ font-family:tahoma;
 color:white;
 text-align:center;
 overflow-y:auto;
-background:black;
 }
 
-/* فيديو */
+/* فيديو كامل */
 #bg{
 position:fixed;
+top:0;
+left:0;
 width:100%;
 height:100%;
 object-fit:cover;
@@ -31,7 +32,7 @@ padding:15px;
 border-radius:15px;
 }
 
-/* أزرار */
+/* زر */
 button{
 padding:10px;
 border:none;
@@ -43,19 +44,20 @@ cursor:pointer;
 
 /* دوائر */
 .circle{
-width:120px;
-height:120px;
+width:110px;
+height:110px;
 border-radius:50%;
-background:red;
+background:#ff3b3b;
 display:inline-flex;
 align-items:center;
 justify-content:center;
 margin:10px;
 cursor:pointer;
+font-size:18px;
 }
 
-.correct{background:green;}
-.wrong{background:red;}
+.correct{background:#2ecc71;}
+.wrong{background:#ff3b3b;}
 
 /* روبوت */
 #robot{
@@ -63,22 +65,21 @@ position:fixed;
 bottom:10px;
 left:10px;
 font-size:40px;
-animation:move 2s infinite alternate;
+animation:up 2s infinite alternate;
 }
-@keyframes move{
+@keyframes up{
 from{transform:translateY(0)}
 to{transform:translateY(-10px)}
 }
 
-/* احتفال */
 #win{
-display:none;
 font-size:30px;
+display:none;
 }
 </style>
 </head>
 
-<body onload="welcome()">
+<body onload="start()">
 
 <video id="bg" autoplay muted loop>
 <source src="https://www.w3schools.com/howto/rain.mp4">
@@ -88,12 +89,12 @@ font-size:30px;
 
 <div id="robot">🤖✨</div>
 
-<!-- تغيير فيديو -->
+<!-- فيديو -->
 <div class="box">
 <input type="file" accept="video/*" onchange="setVideo(event)">
 </div>
 
-<!-- البيانات -->
+<!-- بيانات -->
 <div class="box">
 <h2>البيانات</h2>
 <input id="t" placeholder="المعلمة">
@@ -105,28 +106,28 @@ font-size:30px;
 <!-- الفصول -->
 <div class="box">
 <h2>الفصول</h2>
-<input id="className">
+<input id="classInput">
 <button onclick="addClass()">إضافة</button>
-<div id="classes"></div>
+<div id="classList"></div>
 </div>
 
 <!-- المجموعات -->
 <div class="box">
 <h2>المجموعات</h2>
-<input id="groupName">
-<button onclick="addGroup()">إضافة</button>
-<select id="activeGroup"></select>
+<input id="groupInput">
+<button onclick="addGroup()">إضافة</button><br><br>
+
+<select id="groupSelect"></select>
+
 <div id="groups"></div>
 </div>
 
 <!-- السؤال -->
 <div class="box">
 <h2>السؤال</h2>
-<input id="q"><br>
-<input id="a1">
-<input id="a2"><br>
-<input id="a3">
-<input id="a4"><br>
+<input id="q" placeholder="السؤال"><br>
+<input id="a1"><input id="a2"><br>
+<input id="a3"><input id="a4"><br>
 
 <select id="correct">
 <option value="0">1</option>
@@ -140,8 +141,7 @@ font-size:30px;
 <div id="qBox"></div>
 </div>
 
-<button onclick="winner()">🏆 الفائز</button>
-
+<button onclick="winner()">🏆 إعلان الفائز</button>
 <div id="win"></div>
 
 <script>
@@ -149,15 +149,16 @@ let data = JSON.parse(localStorage.getItem("AI")) || {};
 let currentClass="";
 
 /* صوت */
-function speak(text){
-let msg=new SpeechSynthesisUtterance(text);
+function speak(t){
+let msg=new SpeechSynthesisUtterance(t);
 msg.lang="ar-SA";
 speechSynthesis.speak(msg);
 }
 
-/* ترحيب */
-function welcome(){
-speak("مرحباً بكم في عالم الذكاء");
+/* بداية */
+function start(){
+speak("أهلاً بكم");
+renderClasses();
 }
 
 /* فيديو */
@@ -167,105 +168,118 @@ bg.src=URL.createObjectURL(e.target.files[0]);
 
 /* فصول */
 function addClass(){
-let c=className.value;
+let c=classInput.value;
+if(!c) return;
 if(!data[c]) data[c]={};
 currentClass=c;
-save(); show();
+save();
+renderClasses();
+renderGroups();
 }
 
-function showClasses(){
-classes.innerHTML="";
+/* عرض الفصول */
+function renderClasses(){
+classList.innerHTML="";
 for(let c in data){
-classes.innerHTML+=`
-<div>${c}
+classList.innerHTML+=`
+<div>
+${c}
 <button onclick="selectClass('${c}')">اختيار</button>
 </div>`;
 }
 }
 
+/* اختيار فصل */
 function selectClass(c){
 currentClass=c;
-show();
+renderGroups();
 }
 
 /* مجموعات */
 function addGroup(){
-let g=groupName.value;
-for(let c in data){
-data[c][g]=data[c][g]||0;
-}
-save(); show();
+let g=groupInput.value;
+if(!currentClass) return alert("اختاري فصل");
+if(!g) return;
+
+if(!data[currentClass][g]){
+data[currentClass][g]=0;
 }
 
-function show(){
-groups.innerHTML="";
-activeGroup.innerHTML="";
-for(let g in data[currentClass]){
-groups.innerHTML+=`${g} ⭐ ${data[currentClass][g]}
-<button onclick="addPoint('${g}')">+1</button><br>`;
-activeGroup.innerHTML+=`<option>${g}</option>`;
-}
-showClasses();
-}
-
-/* نقاط */
-function addPoint(g){
-data[currentClass][g]++;
 save();
-show();
-speak("أحسنت");
+renderGroups();
+}
+
+/* عرض مجموعات */
+function renderGroups(){
+groups.innerHTML="";
+groupSelect.innerHTML="";
+
+if(!currentClass) return;
+
+for(let g in data[currentClass]){
+groups.innerHTML+=`
+<div>${g} ⭐ ${data[currentClass][g]}</div>`;
+
+groupSelect.innerHTML+=`<option>${g}</option>`;
+}
 }
 
 /* سؤال */
 function showQ(){
-let arr=[a1.value,a2.value,a3.value,a4.value];
+let answers=[a1.value,a2.value,a3.value,a4.value];
 let c=correct.value;
 
-qBox.innerHTML=q.value+"<br>";
+qBox.innerHTML="<h3>"+q.value+"</h3>";
 
-arr.forEach((ans,i)=>{
+answers.forEach((ans,i)=>{
 qBox.innerHTML+=`
-<div class="circle" onclick="check(${i},${c})">${ans}</div>`;
+<div class="circle" onclick="checkAnswer(${i},${c})">${ans}</div>`;
 });
 
 speak(q.value);
 }
 
 /* تحقق */
-function check(i,c){
+function checkAnswer(i,c){
 let circles=document.querySelectorAll(".circle");
+let group=groupSelect.value;
+
+if(!group) return alert("اختاري مجموعة");
+
 if(i==c){
 circles[i].classList.add("correct");
-let g=activeGroup.value;
-data[currentClass][g]++;
-save(); show();
-speak("صحيح");
+data[currentClass][group]++;
+speak("إجابة صحيحة");
 }else{
 circles[i].classList.add("wrong");
 speak("خطأ");
 }
+
+save();
+renderGroups();
 }
 
 /* فائز */
 function winner(){
-let max=-1,winName="";
+let max=-1;
+let name="";
+
 for(let g in data[currentClass]){
 if(data[currentClass][g]>max){
 max=data[currentClass][g];
-winName=g;
+name=g;
 }
 }
-win.innerHTML="🏆 "+winName;
+
+win.innerHTML="🏆 "+name+" 🎉👏";
 win.style.display="block";
-speak("الفائز هو "+winName);
+speak("الفائز هو "+name);
 }
 
 /* حفظ */
 function save(){
 localStorage.setItem("AI",JSON.stringify(data));
 }
-
-showClasses();
 </script>
 
 </body>
