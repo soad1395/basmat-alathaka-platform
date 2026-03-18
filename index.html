@@ -2,27 +2,16 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>منصة بصمة الذكاء</title>
+<title>بصمة الذكاء</title>
 
 <style>
 body{
 direction:rtl;
 font-family:tahoma;
-margin:0;
-color:white;
 text-align:center;
 background:#020617;
-overflow-x:hidden;
-}
-
-#bgVideo{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-object-fit:cover;
-z-index:-1;
+color:white;
+margin:0;
 }
 
 .box{
@@ -30,71 +19,22 @@ background:#0f172a;
 margin:20px;
 padding:20px;
 border-radius:20px;
-box-shadow:0 0 20px #00eaff55;
-}
-
-input,select{
-padding:10px;
-border-radius:10px;
-border:none;
-margin:5px;
 }
 
 button{
-padding:5px 10px;
+padding:8px 12px;
 margin:5px;
+background:#00eaff;
 border:none;
 border-radius:10px;
-background:#00eaff;
 cursor:pointer;
-}
-
-.circle{
-width:80px;
-height:80px;
-border-radius:50%;
-display:inline-flex;
-align-items:center;
-justify-content:center;
-margin:10px;
-background:#1e293b;
-cursor:pointer;
-}
-
-.confetti{
-position:fixed;
-width:8px;
-height:8px;
-top:-10px;
-animation:fall 3s linear;
-}
-
-@keyframes fall{
-to{transform:translateY(100vh);}
 }
 </style>
 </head>
 
 <body>
 
-<video id="bgVideo" autoplay muted loop></video>
-
 <h1>🤖 منصة بصمة الذكاء</h1>
-
-<button onclick="startSound()">🔊 تشغيل الصوت</button>
-
-<div class="box">
-<h3>🎬 الخلفية</h3>
-<input type="file" accept="video/*" onchange="setBG(event)">
-</div>
-
-<div class="box">
-<h3>البيانات الأساسية</h3>
-<input id="school" placeholder="اسم المدرسة">
-<input id="teacher" placeholder="اسم المعلمة">
-<input id="subject" placeholder="المادة">
-<input id="grade" placeholder="الصف">
-</div>
 
 <div class="box">
 <h3>الفصول</h3>
@@ -110,52 +50,15 @@ to{transform:translateY(100vh);}
 <div id="groups"></div>
 </div>
 
-<div class="box">
-<h3>السؤال</h3>
-<input id="q"><br>
-<input id="a1"><input id="a2"><input id="a3"><input id="a4"><br>
-
-<select id="correct">
-<option value="0">1</option>
-<option value="1">2</option>
-<option value="2">3</option>
-<option value="3">4</option>
-</select>
-
-<button onclick="showQ()">عرض</button>
-<div id="answers"></div>
-</div>
-
 <button onclick="showWinner()">🏆 إعلان الفائز</button>
 <div id="winner"></div>
 
-<audio id="correctSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
-<audio id="wrongSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
-<audio id="clap" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
-
 <script>
 
-/* حفظ البيانات */
-["school","teacher","subject","grade"].forEach(id=>{
-let el=document.getElementById(id);
-el.value=localStorage.getItem(id)||"";
-el.oninput=()=>localStorage.setItem(id,el.value);
-});
-
-/* الخلفية */
-let bg=localStorage.getItem("bg");
-if(bg){bgVideo.src=bg;}
-
-function setBG(e){
-let url=URL.createObjectURL(e.target.files[0]);
-bgVideo.src=url;
-localStorage.setItem("bg",url);
-}
-
 /* بيانات */
-let classes=JSON.parse(localStorage.getItem("classes"))||[];
-let groups=JSON.parse(localStorage.getItem("groups"))||[];
-let currentClass=localStorage.getItem("currentClass")||"";
+let classes = JSON.parse(localStorage.getItem("classes")) || [];
+let groups = JSON.parse(localStorage.getItem("groups")) || [];
+let currentClass = localStorage.getItem("currentClass") || "";
 
 /* حفظ */
 function save(){
@@ -173,12 +76,10 @@ cDiv.innerHTML="";
 
 classes.forEach((c,i)=>{
 let d=document.createElement("div");
-d.innerHTML=(c===currentClass?"👉 ":"")+c+" ❌";
+d.innerHTML=(c===currentClass?"👉 ":"")+c;
 
-d.onclick=()=>{currentClass=c;save();}
-d.ondblclick=()=>{
-classes.splice(i,1);
-groups=groups.filter(g=>g.class!==c);
+d.onclick=()=>{
+currentClass=c;
 save();
 };
 
@@ -188,7 +89,7 @@ cDiv.appendChild(d);
 let gDiv=document.getElementById("groups");
 gDiv.innerHTML="";
 
-let filtered=groups.filter(g=>g.class===currentClass);
+let filtered = groups.filter(g=>g.class===currentClass);
 
 filtered.forEach((g,i)=>{
 
@@ -221,106 +122,43 @@ groups.push({name:v,score:0,class:currentClass});
 save();
 }
 
-/* نقاط */
+/* +1 نقطة */
 function addPoint(i){
-let filtered=groups.filter(g=>g.class===currentClass);
-let g=filtered[i];
+let filtered = groups.filter(g=>g.class===currentClass);
+let g = filtered[i];
 g.score++;
 save();
 }
 
 /* حذف */
 function deleteGroup(i){
-let filtered=groups.filter(g=>g.class===currentClass);
-let g=filtered[i];
+let filtered = groups.filter(g=>g.class===currentClass);
+let g = filtered[i];
 groups.splice(groups.indexOf(g),1);
 save();
-}
-
-/* خلط */
-function shuffle(arr){
-return arr.sort(()=>Math.random()-0.5);
-}
-
-/* السؤال */
-function showQ(){
-answers.innerHTML="";
-
-let arr=[
-{text:a1.value,correct:false},
-{text:a2.value,correct:false},
-{text:a3.value,correct:false},
-{text:a4.value,correct:false}
-];
-
-arr[correct.value].correct=true;
-arr=shuffle(arr);
-
-arr.forEach(a=>{
-let b=document.createElement("div");
-b.className="circle";
-b.innerText=a.text;
-
-b.onclick=()=>{
-if(a.correct){
-b.style.background="green";
-correctSound.play();
-speak("ممتاز");
-}else{
-b.style.background="red";
-wrongSound.play();
-speak("حاولي مرة أخرى");
-}
-};
-
-answers.appendChild(b);
-});
-}
-
-/* صوت */
-function speak(t){
-let m=new SpeechSynthesisUtterance(t);
-m.lang="ar-SA";
-speechSynthesis.speak(m);
-}
-
-function startSound(){
-speak("مرحباً بكم في منصة بصمة الذكاء");
 }
 
 /* الفائز */
 function showWinner(){
 
-let gs = groups.filter(g=>g.class === currentClass);
+let gs = groups.filter(g=>g.class===currentClass);
 
-if(gs.length === 0){
+if(gs.length===0){
 alert("لا يوجد مجموعات");
 return;
 }
 
-let maxScore = Math.max(...gs.map(g=>g.score));
+let max = Math.max(...gs.map(g=>g.score));
 
-if(maxScore === 0){
+if(max===0){
 alert("لا يوجد فائز لأن النقاط صفر");
 return;
 }
 
-let winners = gs.filter(g=>g.score === maxScore);
-let names = winners.map(w=>w.name).join(" و ");
+let win = gs.filter(g=>g.score===max);
+let names = win.map(w=>w.name).join(" و ");
 
-winner.innerHTML = "🏆 الفائز: " + names + " (" + maxScore + " نقطة)";
-
-clap.play();
-speak("الفريق الفائز هو " + names);
-
-for(let i=0;i<40;i++){
-let c=document.createElement("div");
-c.className="confetti";
-c.style.left=Math.random()*100+"%";
-c.style.background="hsl("+Math.random()*360+",100%,50%)";
-document.body.appendChild(c);
-setTimeout(()=>c.remove(),3000);
-}
+winner.innerHTML="🏆 الفائز: "+names+" ("+max+" نقطة)";
 }
 
 render();
