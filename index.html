@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
@@ -7,14 +7,13 @@
 <style>
 body{margin:0;font-family:tahoma;text-align:center;color:white}
 
-/* 🔥 الحل هنا */
 #bg{
 position:fixed;
 top:0;left:0;
 width:100%;height:100%;
 object-fit:cover;
 z-index:-1;
-pointer-events:none; /* يمنع الفيديو من منع الضغط */
+pointer-events:none;
 }
 
 .box{
@@ -103,13 +102,6 @@ z-index:10;
 <input id="a1"><input id="a2"><br>
 <input id="a3"><input id="a4"><br>
 
-<select id="correct">
-<option value="0">1</option>
-<option value="1">2</option>
-<option value="2">3</option>
-<option value="3">4</option>
-</select>
-
 <button onclick="showQ()">عرض</button>
 <div id="qBox"></div>
 </div>
@@ -152,7 +144,6 @@ subject:subject.value,
 grade:grade.value
 };
 localStorage.setItem("info",JSON.stringify(info));
-speak("تم الحفظ");
 }
 
 window.onload=function(){
@@ -255,7 +246,6 @@ answers.forEach((a,i)=>{
 let div=document.createElement("div");
 div.className="circle";
 div.innerText=a;
-div.setAttribute("data-i", i);
 
 div.onclick=function(){
 check(this);
@@ -265,21 +255,23 @@ qBox.appendChild(div);
 });
 }
 
-/* إجابة */
+/* الإجابة - أنتِ تحددين الصح */
 function check(el){
-let correctIndex=document.getElementById("correct").selectedIndex;
-let clickedIndex=Number(el.getAttribute("data-i"));
-let g=document.getElementById("groupSelect").value;
 
-document.querySelectorAll(".circle").forEach(e=>{
-e.classList.remove("correct","wrong");
-});
+let g = document.getElementById("groupSelect").value;
 
-if(clickedIndex===correctIndex){
+/* أول ضغط = تحديد الصح */
+if(!document.querySelector(".correct")){
 el.classList.add("correct");
+speak("تم تحديد الإجابة الصحيحة");
+return;
+}
 
-if(g && data[currentClass][g]!==undefined){
-data[currentClass][g]+=1;
+/* بعدها الطالبات يجاوبون */
+if(el.classList.contains("correct")){
+
+if(g && data[currentClass] && data[currentClass][g] !== undefined){
+data[currentClass][g] += 1;
 }
 
 speak("إجابة صحيحة");
@@ -306,7 +298,6 @@ name=g;
 }
 win.innerText="🏆 "+name;
 clap();confetti();
-speak("الفائز "+name);
 }
 
 /* مؤثرات */
