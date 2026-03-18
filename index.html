@@ -262,30 +262,45 @@ ${a}
 });
 }
 
-/* إجابة */
+/* إجابة *}
 function check(el){
-let c=parseInt(correct.value);
-let i=parseInt(el.dataset.i);
-let g=groupSelect.value;
 
+let correctIndex = parseInt(document.getElementById("correct").value);
+let clickedIndex = parseInt(el.getAttribute("data-i"));
+let g = document.getElementById("groupSelect").value;
+
+// تنظيف
 document.querySelectorAll(".circle").forEach(e=>{
 e.classList.remove("correct","wrong");
 });
 
-if(i===c){
+// التصحيح الصحيح
+if(clickedIndex === correctIndex){
+
 el.classList.add("correct");
-if(g){data[currentClass][g]++;}
-speak("إجابة صحيحة");
-clap();confetti();
-}else{
-el.classList.add("wrong");
-speak("خطأ");
+
+// النقطة للمجموعة المختارة فقط
+if(g && data[currentClass] && data[currentClass][g] !== undefined){
+data[currentClass][g] += 1;
 }
 
-saveData();
+speak("إجابة صحيحة");
+clap();
+confetti();
+
+}else{
+
+el.classList.add("wrong");
+speak("إجابة خاطئة");
+
+}
+
+// حفظ
+localStorage.setItem("data", JSON.stringify(data));
+
+// تحديث
 renderGroups();
 }
-
 /* فائز */
 function winner(){
 let max=-1,name="";
