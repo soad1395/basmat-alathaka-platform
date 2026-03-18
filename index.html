@@ -7,12 +7,14 @@
 <style>
 body{margin:0;font-family:tahoma;text-align:center;color:white}
 
+/* 🔥 الحل هنا */
 #bg{
 position:fixed;
 top:0;left:0;
 width:100%;height:100%;
 object-fit:cover;
 z-index:-1;
+pointer-events:none; /* يمنع الفيديو من منع الضغط */
 }
 
 .box{
@@ -47,6 +49,8 @@ align-items:center;
 justify-content:center;
 margin:10px;
 cursor:pointer;
+position:relative;
+z-index:10;
 }
 
 .correct{background:green}
@@ -62,12 +66,10 @@ cursor:pointer;
 
 <h2>🤖 منصة بصمة الذكاء</h2>
 
-<!-- رفع فيديو -->
 <div class="box">
 <input type="file" accept="video/*" onchange="uploadVideo(event)">
 </div>
 
-<!-- البيانات -->
 <div class="box">
 <input id="teacher" placeholder="المعلمة">
 <input id="school" placeholder="المدرسة">
@@ -76,14 +78,12 @@ cursor:pointer;
 <button onclick="saveInfo()">💾 حفظ</button>
 </div>
 
-<!-- الفصول -->
 <div class="box">
 <input id="classInput" placeholder="فصل">
 <button onclick="addClass()">إضافة</button>
 <div id="classList"></div>
 </div>
 
-<!-- المجموعات -->
 <div class="box">
 <input id="groupInput" placeholder="مجموعة">
 <button onclick="addGroup()">إضافة</button>
@@ -97,7 +97,6 @@ cursor:pointer;
 <button onclick="addPoint()">➕ نقطة</button>
 </div>
 
-<!-- السؤال -->
 <div class="box">
 <input id="q" placeholder="السؤال"><br>
 
@@ -124,7 +123,6 @@ let data=JSON.parse(localStorage.getItem("data"))||{};
 let currentClass="";
 let started=false;
 
-/* صوت */
 function speak(t){
 speechSynthesis.cancel();
 let m=new SpeechSynthesisUtterance(t);
@@ -139,7 +137,6 @@ started=true;
 }
 }
 
-/* فيديو */
 function uploadVideo(e){
 let file=e.target.files[0];
 if(file){
@@ -147,7 +144,6 @@ bg.src=URL.createObjectURL(file);
 }
 }
 
-/* بيانات */
 function saveInfo(){
 let info={
 teacher:teacher.value,
@@ -251,45 +247,39 @@ speak("المجموعة "+g);
 
 /* سؤال */
 function showQ(){
+let answers=[a1.value,a2.value,a3.value,a4.value];
 
-  let answers=[a1.value,a2.value,a3.value,a4.value];
+qBox.innerHTML="<h3>"+q.value+"</h3>";
 
-  qBox.innerHTML="<h3>"+q.value+"</h3>";
+answers.forEach((a,i)=>{
+let div=document.createElement("div");
+div.className="circle";
+div.innerText=a;
+div.setAttribute("data-i", i);
 
-  answers.forEach((a,i)=>{
-    let div = document.createElement("div");
-    div.className = "circle";
-    div.innerText = a;
-    div.setAttribute("data-i", i);
+div.onclick=function(){
+check(this);
+};
 
-    div.onclick = function(){
-      check(this);
-    };
-
-    qBox.appendChild(div);
-  });
-
+qBox.appendChild(div);
+});
 }
 
-/* إجابة *}
+/* إجابة */
 function check(el){
-let correctIndex = document.getElementById("correct").selectedIndex;
-let clickedIndex = Number(el.getAttribute("data-i"));
-let g = document.getElementById("groupSelect").value;
+let correctIndex=document.getElementById("correct").selectedIndex;
+let clickedIndex=Number(el.getAttribute("data-i"));
+let g=document.getElementById("groupSelect").value;
 
-// تنظيف
 document.querySelectorAll(".circle").forEach(e=>{
 e.classList.remove("correct","wrong");
 });
 
-// التصحيح الصحيح
-if(clickedIndex === correctIndex){
-
+if(clickedIndex===correctIndex){
 el.classList.add("correct");
 
-// النقطة للمجموعة المختارة فقط
-if(g && data[currentClass] && data[currentClass][g] !== undefined){
-data[currentClass][g] += 1;
+if(g && data[currentClass][g]!==undefined){
+data[currentClass][g]+=1;
 }
 
 speak("إجابة صحيحة");
@@ -297,18 +287,14 @@ clap();
 confetti();
 
 }else{
-
 el.classList.add("wrong");
 speak("إجابة خاطئة");
-
 }
 
-// حفظ
-localStorage.setItem("data", JSON.stringify(data));
-
-// تحديث
+saveData();
 renderGroups();
 }
+
 /* فائز */
 function winner(){
 let max=-1,name="";
@@ -346,6 +332,7 @@ setTimeout(()=>{clearInterval(fall);d.remove()},2000);
 function saveData(){
 localStorage.setItem("data",JSON.stringify(data));
 }
+
 renderGroups();
 
 </script>
