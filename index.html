@@ -1,248 +1,104 @@
- <!DOCTYPE html>
-<html lang="ar">
-<head>
-<meta charset="UTF-8">
-<title>منصة بصمة الذكاء</title>
+ // ===== النظام النهائي =====
 
-<style>
-body{
-direction:rtl;
-font-family:tahoma;
-margin:0;
-color:white;
-text-align:center;
-overflow:hidden;
-background:#020617;
-}
+let data = JSON.parse(localStorage.getItem("AI")) || {};
+let currentClass = "";
 
-/* فيديو الخلفية */
-#bgVideo{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-object-fit:cover;
-z-index:-1;
-}
-
-/* صندوق */
-.box{
-background:#0f172acc;
-margin:20px;
-padding:20px;
-border-radius:20px;
-}
-
-/* أزرار */
-button{
-padding:10px 15px;
-margin:5px;
-background:#00eaff;
-border:none;
-border-radius:10px;
-cursor:pointer;
-}
-
-input{
-padding:10px;
-border-radius:10px;
-border:none;
-margin:5px;
-width:200px;
-}
-</style>
-</head>
-
-<body>
-
-<video id="bgVideo" autoplay muted loop></video>
-
-<h1>🤖 منصة بصمة الذكاء</h1>
-
-<!-- صوت ترحيب -->
-<button onclick="welcome()">🔊 تشغيل الصوت</button>
-<input type="file" accept="video/*" onchange="changeBg(event)">
-
-<!-- البيانات -->
-<div class="box">
-<h2>البيانات الأساسية</h2>
-<input placeholder="اسم المعلمة">
-<input placeholder="اسم المدرسة">
-<input placeholder="المادة">
-<input placeholder="الصف">
-</div>
-
-<!-- الفصول -->
-<div class="box">
-<h2>الفصول</h2>
-<input id="inputClass" placeholder="اسم الفصل">
-<button onclick="addClass()">إضافة</button>
-<div id="classes"></div>
-</div>
-
-<!-- المجموعات -->
-<div class="box">
-<h2>المجموعات</h2>
-<input id="inputGroup" placeholder="اسم المجموعة">
-<button onclick="addGroup()">إضافة</button>
-<div id="groups"></div>
-</div>
-
-<button onclick="showWinner()">🏆 إعلان الفائز</button>
-
-<h2 id="result"></h2>
-
-<script>
-
-// ===== البيانات =====
-let DB = JSON.parse(localStorage.getItem("DB") || "{}");
-let currentClass = localStorage.getItem("CLASS") || "";
-
-// ===== حفظ =====
+// حفظ
 function save(){
-localStorage.setItem("DB", JSON.stringify(DB));
-localStorage.setItem("CLASS", currentClass);
+localStorage.setItem("AI", JSON.stringify(data));
 }
 
-// ===== صوت روبوت =====
-function robotSpeak(text){
-let msg = new SpeechSynthesisUtterance(text);
-msg.lang = "ar-SA";
-speechSynthesis.speak(msg);
+// اختيار فصل
+function setClass(){
+currentClass = document.getElementById("className").value;
+
+if(!data[currentClass]){
+data[currentClass] = {};
 }
 
-// ===== ترحيب أول دخول =====
-window.onload = ()=>{
-robotSpeak("مرحباً بكم في عالم الذكاء");
-render();
-}
-
-// ===== تغيير فيديو =====
-function changeBg(e){
-let url = URL.createObjectURL(e.target.files[0]);
-bgVideo.src = url;
-}
-
-// ===== تشغيل صوت =====
-function welcome(){
-robotSpeak("ابدأوا التحدي الآن");
-}
-
-// ===== إضافة فصل =====
-function addClass(){
-let name = inputClass.value;
-
-let div = document.createElement("div");
-div.innerHTML = `<button onclick="selectClass('${name}')">${name}</button>`;
-classes.appendChild(div);
-
-if(!DB[name]){
-DB[name] = [];
-}
 save();
+show();
 }
 
-// ===== اختيار فصل =====
-function selectClass(name){
-currentClass = name;
-robotSpeak("تم اختيار الفصل");
-render();
-save();
-}
-
-// ===== إضافة مجموعة =====
+// إضافة مجموعة (ثابتة)
 function addGroup(){
-let name = inputGroup.value;
+let c = currentClass;
+let g = document.getElementById("groupName").value;
 
-if(!currentClass){
+if(!c) {
 alert("اختاري فصل أول");
 return;
 }
 
-DB[currentClass].push({
-name:name,
-points:0
-});
-
-robotSpeak("تمت إضافة مجموعة");
-
-save();
-render();
+// إضافة لكل الفصول (عشان تكون نفس المجموعات)
+for(let cls in data){
+if(!data[cls][g]){
+data[cls][g] = 0;
+}
 }
 
-// ===== عرض =====
-function render(){
-groups.innerHTML="";
+// لو أول مرة
+if(!data[c]){
+data[c] = {};
+data[c][g] = 0;
+}
 
-if(!DB[currentClass]) return;
+save();
+show();
+}
 
-DB[currentClass].forEach((g,i)=>{
-groups.innerHTML += `
-<div>
-${g.name} ⭐ ${g.points}
-<button onclick="addPoint(${i})">+1</button>
-<button onclick="removeGroup(${i})">❌</button>
+// عرض المجموعات
+function show(){
+let container = document.getElementById("groups");
+container.innerHTML = "";
+
+if(!data[currentClass]) return;
+
+for(let g in data[currentClass]){
+container.innerHTML += `
+<div class="box">
+<h3>${g}</h3>
+<p>النقاط: ${data[currentClass][g]}</p>
+<button onclick="addPoint('${g}')">+1</button>
 </div>
 `;
-});
+}
 }
 
-// ===== نقاط =====
-function addPoint(i){
-DB[currentClass][i].points++;
-
-robotSpeak("إجابة صحيحة");
-
-new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3").play();
+// إضافة نقطة للمجموعة اللي جاوبت
+function addPoint(group){
+data[currentClass][group]++;
 
 save();
-render();
+show();
+
+// صوت + روبوت
+new Audio("https://www.soundjay.com/buttons/button-3.mp3").play();
+
+let msg = new SpeechSynthesisUtterance("أحسنت");
+msg.lang="ar-SA";
+speechSynthesis.speak(msg);
 }
 
-// ===== حذف =====
-function removeGroup(i){
-DB[currentClass].splice(i,1);
-save();
-render();
-}
+// الفائز حسب الفصل فقط
+function winner(){
+let max = -1;
+let win = "";
 
-// ===== فائز =====
-function showWinner(){
-let list = DB[currentClass];
-if(!list) return;
-
-let max = Math.max(...list.map(g=>g.points));
-let win = list.filter(g=>g.points==max);
-
-let names = win.map(w=>w.name).join(" و ");
-
-result.innerHTML = "🏆 الفائز: " + names;
-
-robotSpeak("الفريق الفائز هو " + names);
-
-new Audio("https://www.soundjay.com/human/sounds/applause-8.mp3").play();
-
-confetti();
-}
-
-// ===== قصاصات =====
-function confetti(){
-for(let i=0;i<40;i++){
-let c=document.createElement("div");
-c.style.position="fixed";
-c.style.width="8px";
-c.style.height="8px";
-c.style.background=`hsl(${Math.random()*360},100%,50%)`;
-c.style.left=Math.random()*100+"%";
-c.style.top="-10px";
-c.style.animation="fall 3s linear";
-document.body.appendChild(c);
-setTimeout(()=>c.remove(),3000);
+for(let g in data[currentClass]){
+if(data[currentClass][g] > max){
+max = data[currentClass][g];
+win = g;
 }
 }
 
-</script>
+document.getElementById("result").innerHTML =
+"🏆 الفائز: " + win + " (" + max + ")";
 
-</body>
-</html>
+// تصفيق + صوت
+new Audio("https://www.soundjay.com/human/applause-8.mp3").play();
+
+let msg = new SpeechSynthesisUtterance("الفائز هو " + win);
+msg.lang="ar-SA";
+speechSynthesis.speak(msg);
+}
