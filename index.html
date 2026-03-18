@@ -55,12 +55,10 @@ cursor:pointer;
 
 <script>
 
-/* بيانات */
 let classes = JSON.parse(localStorage.getItem("classes")) || [];
 let groups = JSON.parse(localStorage.getItem("groups")) || [];
 let currentClass = localStorage.getItem("currentClass") || "";
 
-/* حفظ */
 function save(){
 localStorage.setItem("classes",JSON.stringify(classes));
 localStorage.setItem("groups",JSON.stringify(groups));
@@ -68,7 +66,6 @@ localStorage.setItem("currentClass",currentClass);
 render();
 }
 
-/* عرض */
 function render(){
 
 let cDiv=document.getElementById("classes");
@@ -78,11 +75,7 @@ classes.forEach((c,i)=>{
 let d=document.createElement("div");
 d.innerHTML=(c===currentClass?"👉 ":"")+c;
 
-d.onclick=()=>{
-currentClass=c;
-save();
-};
-
+d.onclick=()=>{currentClass=c;save();};
 cDiv.appendChild(d);
 });
 
@@ -105,7 +98,6 @@ gDiv.appendChild(d);
 });
 }
 
-/* إضافة */
 function addClass(){
 let v=classInput.value;
 if(!v)return;
@@ -122,7 +114,6 @@ groups.push({name:v,score:0,class:currentClass});
 save();
 }
 
-/* +1 نقطة */
 function addPoint(i){
 let filtered = groups.filter(g=>g.class===currentClass);
 let g = filtered[i];
@@ -130,7 +121,6 @@ g.score++;
 save();
 }
 
-/* حذف */
 function deleteGroup(i){
 let filtered = groups.filter(g=>g.class===currentClass);
 let g = filtered[i];
@@ -138,7 +128,6 @@ groups.splice(groups.indexOf(g),1);
 save();
 }
 
-/* الفائز */
 function showWinner(){
 
 let gs = groups.filter(g=>g.class===currentClass);
