@@ -2,25 +2,38 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>بصمة الذكاء</title>
+<title>منصة بصمة الذكاء</title>
 
 <style>
 body{
 direction:rtl;
 font-family:tahoma;
 text-align:center;
-background:#020617;
-color:white;
 margin:0;
+color:white;
+overflow:hidden;
 }
 
+/* فيديو خلفية */
+video{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+object-fit:cover;
+z-index:-1;
+}
+
+/* صندوق */
 .box{
-background:#0f172a;
+background:#0f172acc;
 margin:20px;
 padding:20px;
 border-radius:20px;
 }
 
+/* أزرار */
 button{
 padding:8px 12px;
 margin:5px;
@@ -29,13 +42,38 @@ border:none;
 border-radius:10px;
 cursor:pointer;
 }
+
+/* قصاصات */
+.confetti{
+position:fixed;
+width:10px;
+height:10px;
+background:red;
+top:-10px;
+animation:fall 3s linear infinite;
+}
+
+@keyframes fall{
+to{transform:translateY(100vh);}
+}
 </style>
 </head>
 
 <body>
 
+<!-- فيديو خلفية -->
+<video id="bgVideo" autoplay muted loop></video>
+
 <h1>🤖 منصة بصمة الذكاء</h1>
 
+<button onclick="enableSound()">🔊 تشغيل الصوت</button>
+<input type="file" accept="video/*" onchange="setVideo(event)">
+
+<audio id="startSound" src="https://www.soundjay.com/buttons/button-3.mp3"></audio>
+<audio id="correctSound" src="https://www.soundjay.com/buttons/button-4.mp3"></audio>
+<audio id="clap" src="https://www.soundjay.com/human/applause-8.mp3"></audio>
+
+<!-- الفصول -->
 <div class="box">
 <h3>الفصول</h3>
 <input id="classInput">
@@ -43,6 +81,7 @@ cursor:pointer;
 <div id="classes"></div>
 </div>
 
+<!-- المجموعات -->
 <div class="box">
 <h3>المجموعات</h3>
 <input id="groupInput">
@@ -50,107 +89,111 @@ cursor:pointer;
 <div id="groups"></div>
 </div>
 
+<!-- إعلان -->
 <button onclick="showWinner()">🏆 إعلان الفائز</button>
-<div id="winner"></div>
+
+<h2 id="result"></h2>
 
 <script>
 
-let classes = JSON.parse(localStorage.getItem("classes")) || [];
-let groups = JSON.parse(localStorage.getItem("groups")) || [];
-let currentClass = localStorage.getItem("currentClass") || "";
+/* ================= حفظ ================= */
+let groups = JSON.parse(localStorage.getItem("groups")||"[]");
 
 function save(){
-localStorage.setItem("classes",JSON.stringify(classes));
-localStorage.setItem("groups",JSON.stringify(groups));
-localStorage.setItem("currentClass",currentClass);
-render();
+localStorage.setItem("groups", JSON.stringify(groups));
 }
 
-function render(){
-
-let cDiv=document.getElementById("classes");
-cDiv.innerHTML="";
-
-classes.forEach((c,i)=>{
-let d=document.createElement("div");
-d.innerHTML=(c===currentClass?"👉 ":"")+c;
-
-d.onclick=()=>{currentClass=c;save();};
-cDiv.appendChild(d);
-});
-
-let gDiv=document.getElementById("groups");
-gDiv.innerHTML="";
-
-let filtered = groups.filter(g=>g.class===currentClass);
-
-filtered.forEach((g,i)=>{
-
-let d=document.createElement("div");
-
-d.innerHTML = `
-${g.name} ⭐ ${g.score}
-<button onclick="addPoint(${i})">+1</button>
-<button onclick="deleteGroup(${i})">❌</button>
-`;
-
-gDiv.appendChild(d);
-});
-}
-
-function addClass(){
-let v=classInput.value;
-if(!v)return;
-classes.push(v);
-if(!currentClass)currentClass=v;
-save();
-}
-
+/* ================= المجموعات ================= */
 function addGroup(){
-if(!currentClass){alert("اختاري فصل");return;}
-let v=groupInput.value;
-if(!v)return;
-groups.push({name:v,score:0,class:currentClass});
+let name = document.getElementById("groupInput").value;
+if(!name) return;
+
+groups.push({name:name, score:0});
 save();
+render();
 }
 
 function addPoint(i){
-let filtered = groups.filter(g=>g.class===currentClass);
-let g = filtered[i];
-g.score++;
+groups[i].score++;
 save();
+render();
+document.getElementById("correctSound").play();
 }
 
-function deleteGroup(i){
-let filtered = groups.filter(g=>g.class===currentClass);
-let g = filtered[i];
-groups.splice(groups.indexOf(g),1);
+function removeGroup(i){
+groups.splice(i,1);
 save();
+render();
 }
 
-function showWinner(){
+/* ================= عرض ================= */
+function render(){
+let div = document.getElementById("groups");
+div.innerHTML="";
 
-let gs = groups.filter(g=>g.class===currentClass);
-
-if(gs.length===0){
-alert("لا يوجد مجموعات");
-return;
-}
-
-let max = Math.max(...gs.map(g=>g.score));
-
-if(max===0){
-alert("لا يوجد فائز لأن النقاط صفر");
-return;
-}
-
-let win = gs.filter(g=>g.score===max);
-let names = win.map(w=>w.name).join(" و ");
-
-winner.innerHTML="🏆 الفائز: "+names+" ("+max+" نقطة)";
+groups.forEach((g,i)=>{
+div.innerHTML += `
+<div>
+❌ <button onclick="removeGroup(${i})">X</button>
+⭐ ${g.score} ${g.name}
+<button onclick="addPoint(${i})">+1</button>
+</div>
+`;
+});
 }
 
 render();
+
+/* ================= الفائز ================= */
+function showWinner(){
+if(groups.length==0) return;
+
+let max = Math.max(...groups.map(g=>g.score));
+let winner = groups.find(g=>g.score==max);
+
+document.getElementById("result").innerHTML =
+"🏆 الفائز: "+winner.name+" ("+winner.score+")";
+
+document.getElementById("clap").play();
+confetti();
+}
+
+/* ================= قصاصات ================= */
+function confetti(){
+for(let i=0;i<50;i++){
+let c = document.createElement("div");
+c.className="confetti";
+c.style.left=Math.random()*100+"%";
+c.style.background=`hsl(${Math.random()*360},100%,50%)`;
+document.body.appendChild(c);
+setTimeout(()=>c.remove(),3000);
+}
+}
+
+/* ================= الصوت أول دخول ================= */
+window.onload = ()=>{
+document.getElementById("startSound").play().catch(()=>{});
+}
+
+/* ================= تشغيل الصوت ================= */
+function enableSound(){
+document.getElementById("startSound").play();
+}
+
+/* ================= الفيديو ================= */
+function setVideo(e){
+let file = e.target.files[0];
+if(file){
+let url = URL.createObjectURL(file);
+document.getElementById("bgVideo").src = url;
+localStorage.setItem("video", url);
+}
+}
+
+let savedVideo = localStorage.getItem("video");
+if(savedVideo){
+document.getElementById("bgVideo").src = savedVideo;
+}
 
 </script>
 
