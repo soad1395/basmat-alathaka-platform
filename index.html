@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
@@ -9,20 +9,33 @@ body{
 direction:rtl;
 font-family:tahoma;
 margin:0;
-text-align:center;
 color:white;
-background:#020617;
+text-align:center;
+overflow:hidden;
 }
 
+/* فيديو الخلفية */
+#bgVideo{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+object-fit:cover;
+z-index:-1;
+}
+
+/* الصناديق */
 .box{
-background:#0f172a;
+background:#0f172acc;
 margin:20px;
 padding:20px;
 border-radius:20px;
 }
 
+/* الأزرار */
 button{
-padding:8px 12px;
+padding:10px 15px;
 margin:5px;
 background:#00eaff;
 border:none;
@@ -34,105 +47,153 @@ cursor:pointer;
 
 <body>
 
+<!-- فيديو -->
+<video id="bgVideo" autoplay muted loop></video>
+
 <h1>🤖 منصة بصمة الذكاء</h1>
 
+<!-- صوت + رفع فيديو -->
+<button onclick="playSound()">🔊 تشغيل الصوت</button>
+<input type="file" accept="video/*" onchange="changeBg(event)">
+
+<!-- الفصول -->
 <div class="box">
-<input id="classInput" placeholder="اسم الفصل">
-<button onclick="setClass()">اختيار الفصل</button>
+<h2>الفصول</h2>
+<input id="inputClass" placeholder="اسم الفصل">
+<button onclick="addClass()">إضافة</button>
+<div id="classes"></div>
 </div>
 
+<!-- المجموعات -->
 <div class="box">
-<input id="groupInput" placeholder="اسم المجموعة">
-<button onclick="addGroup()">إضافة مجموعة</button>
+<h2>المجموعات</h2>
+<input id="inputGroup" placeholder="اسم المجموعة">
+<button onclick="addGroup()">إضافة</button>
 <div id="groups"></div>
 </div>
 
+<!-- الفائز -->
 <button onclick="showWinner()">🏆 إعلان الفائز</button>
-
-<h2 id="result"></h2>
 
 <script>
 
-let DB = JSON.parse(localStorage.getItem("DB") || "{}");
-let currentClass = localStorage.getItem("CLASS") || "";
+/* البيانات */
+let classesData = {};
+let currentClass = "";
 
-function save(){
-localStorage.setItem("DB", JSON.stringify(DB));
-localStorage.setItem("CLASS", currentClass);
-}
+/* إضافة فصل */
+function addClass(){
+let name = document.getElementById("inputClass").value;
 
-function setClass(){
-currentClass = classInput.value;
-
-if(!DB[currentClass]){
-DB[currentClass] = [];
-}
-
-save();
-render();
-}
-
-function addGroup(){
-let name = groupInput.value;
-if(!name) return;
-
-Object.keys(DB).forEach(cls=>{
-DB[cls].push({name:name,score:0});
-});
-
-if(!DB[currentClass]){
-DB[currentClass]=[];
-}
-
-DB[currentClass].push({name:name,score:0});
-
-save();
-render();
-}
-
-function addPoint(i){
-DB[currentClass][i].score++;
-save();
-render();
-}
-
-function removeGroup(i){
-Object.keys(DB).forEach(cls=>{
-DB[cls].splice(i,1);
-});
-save();
-render();
-}
-
-function render(){
-groups.innerHTML="";
-
-if(!DB[currentClass]) return;
-
-DB[currentClass].forEach((g,i)=>{
-groups.innerHTML+=`
-<div>
-<button onclick="addPoint(${i})">1+</button>
-⭐ ${g.score} ${g.name}
-<button onclick="removeGroup(${i})">❌</button>
-</div>
+let div = document.createElement("div");
+div.innerHTML = `
+<button onclick="selectClass('${name}')">${name}</button>
 `;
+
+document.getElementById("classes").appendChild(div);
+
+if(!classesData[name]){
+classesData[name] = [];
+}
+}
+
+/* اختيار فصل */
+function selectClass(name){
+currentClass = name;
+renderGroups();
+}
+
+/* إضافة مجموعة */
+function addGroup(){
+let name = document.getElementById("inputGroup").value;
+
+if(!currentClass){
+alert("اختاري فصل أول");
+return;
+}
+
+classesData[currentClass].push({
+name:name,
+points:0
+});
+
+renderGroups();
+}
+
+/* عرض المجموعات */
+function renderGroups(){
+let container = document.getElementById("groups");
+container.innerHTML = "";
+
+let groups = classesData[currentClass] || [];
+
+groups.forEach((g,index)=>{
+let div = document.createElement("div");
+
+div.innerHTML = `
+${g.name} ⭐ ${g.points}
+<button onclick="addPoint(${index})">+1</button>
+<button onclick="removeGroup(${index})">❌</button>
+`;
+
+container.appendChild(div);
 });
 }
 
-function showWinner(){
-let list = DB[currentClass];
-if(!list) return;
-
-let max = Math.max(...list.map(g=>g.score));
-let win = list.filter(g=>g.score==max);
-
-let names = win.map(w=>w.name).join(" و ");
-
-result.innerHTML="🏆 "+names;
+/* زيادة النقاط */
+function addPoint(index){
+classesData[currentClass][index].points++;
+playSound();
+renderGroups();
 }
 
-render();
+/* حذف مجموعة */
+function removeGroup(index){
+classesData[currentClass].splice(index,1);
+renderGroups();
+}
+
+/* إعلان الفائز */
+function showWinner(){
+let groups = classesData[currentClass] || [];
+
+if(groups.length === 0){
+alert("لا يوجد مجموعات");
+return;
+}
+
+let max = Math.max(...groups.map(g=>g.points));
+
+if(max === 0){
+alert("لا يوجد فائز");
+return;
+}
+
+let winners = groups.filter(g=>g.points === max);
+
+clapSound();
+
+alert("🏆 الفائز: " + winners.map(w=>w.name).join(" و "));
+}
+
+/* صوت عادي */
+function playSound(){
+let audio = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
+audio.play();
+}
+
+/* صوت تصفيق */
+function clapSound(){
+let audio = new Audio("https://www.soundjay.com/human/sounds/applause-8.mp3");
+audio.play();
+}
+
+/* تغيير الخلفية */
+function changeBg(e){
+let file = e.target.files[0];
+let url = URL.createObjectURL(file);
+document.getElementById("bgVideo").src = url;
+}
 
 </script>
 
