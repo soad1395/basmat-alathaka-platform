@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
@@ -251,13 +251,17 @@ function check(el){
 
 let g=groupSelect.value;
 
-/* أول ضغط = تحديد الصح */
+/* أول ضغط = تحديد الصح بدون لون */
 if(!correctElement){
 correctElement=el;
-el.classList.add("correct");
 speak("تم تحديد الإجابة الصحيحة");
 return;
 }
+
+/* تنظيف */
+document.querySelectorAll(".circle").forEach(e=>{
+e.classList.remove("correct","wrong");
+});
 
 /* الطالبة */
 if(el===correctElement){
@@ -293,7 +297,6 @@ win.innerText="🏆 "+name;
 clap();confetti();
 }
 
-/* مؤثرات */
 function clap(){
 new Audio("https://www.soundjay.com/human/applause-8.mp3").play();
 }
