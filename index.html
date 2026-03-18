@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
@@ -114,6 +114,7 @@ z-index:10;
 let data=JSON.parse(localStorage.getItem("data"))||{};
 let currentClass="";
 let started=false;
+let correctElement=null;
 
 function speak(t){
 speechSynthesis.cancel();
@@ -157,87 +158,11 @@ grade.value=info.grade||"";
 renderClasses();
 }
 
-/* فصول */
-function addClass(){
-let c=classInput.value;
-if(!c)return;
-data[c]={};
-currentClass=c;
-saveData();
-renderClasses();
-renderGroups();
-}
-
-function renderClasses(){
-classList.innerHTML="";
-for(let c in data){
-classList.innerHTML+=`
-<div>${c}
-<button onclick="selectClass('${c}')">اختيار</button>
-<button onclick="deleteClass('${c}')">❌</button>
-</div>`;
-}
-}
-
-function selectClass(c){
-currentClass=c;
-renderGroups();
-}
-
-function deleteClass(c){
-delete data[c];
-saveData();
-renderClasses();
-renderGroups();
-}
-
-/* مجموعات */
-function addGroup(){
-let g=groupInput.value;
-if(!currentClass)return alert("اختاري فصل");
-data[currentClass][g]=data[currentClass][g]||0;
-saveData();
-renderGroups();
-}
-
-function deleteGroup(g){
-delete data[currentClass][g];
-saveData();
-renderGroups();
-}
-
-function renderGroups(){
-groups.innerHTML="";
-groupSelect.innerHTML="";
-for(let g in data[currentClass]||{}){
-groups.innerHTML+=`${g} ⭐ ${data[currentClass][g]} 
-<button onclick="deleteGroup('${g}')">❌</button><br>`;
-groupSelect.innerHTML+=`<option>${g}</option>`;
-}
-}
-
-/* نقطة */
-function addPoint(){
-let g=groupSelect.value;
-if(!g)return;
-data[currentClass][g]++;
-saveData();
-renderGroups();
-}
-
-/* عجلة */
-function spin(){
-let arr=Object.keys(data[currentClass]||{});
-if(arr.length===0)return;
-
-let g=arr[Math.floor(Math.random()*arr.length)];
-selected.innerText="🎯 "+g;
-groupSelect.value=g;
-speak("المجموعة "+g);
-}
-
-/* سؤال */
+/* 🔥 هنا التعديل */
 function showQ(){
+
+correctElement = null; // تصفير الإجابة لكل سؤال جديد
+
 let answers=[a1.value,a2.value,a3.value,a4.value];
 
 qBox.innerHTML="<h3>"+q.value+"</h3>";
@@ -256,8 +181,6 @@ qBox.appendChild(div);
 }
 
 /* الإجابات */
-let correctElement=null;
-
 function check(el){
 
 let g = document.getElementById("groupSelect").value;
@@ -291,42 +214,20 @@ saveData();
 renderGroups();
 }
 
-/* فائز */
-function winner(){
-let max=-1,name="";
-for(let g in data[currentClass]){
-if(data[currentClass][g]>max){
-max=data[currentClass][g];
-name=g;
-}
-}
-win.innerText="🏆 "+name;
-clap();confetti();
-}
+/* باقي الكود كما هو */
 
-/* مؤثرات */
-function clap(){
-new Audio("https://www.soundjay.com/human/applause-8.mp3").play();
-}
-
-function confetti(){
-for(let i=0;i<30;i++){
-let d=document.createElement("div");
-d.style.position="fixed";
-d.style.width="6px";
-d.style.height="6px";
-d.style.background="yellow";
-d.style.top="0";
-d.style.left=Math.random()*100+"%";
-document.body.appendChild(d);
-let fall=setInterval(()=>d.style.top=(d.offsetTop+5)+"px",20);
-setTimeout(()=>{clearInterval(fall);d.remove()},2000);
-}
-}
-
-function saveData(){
-localStorage.setItem("data",JSON.stringify(data));
-}
+function renderClasses(){...}
+function addClass(){...}
+function deleteClass(){...}
+function addGroup(){...}
+function deleteGroup(){...}
+function renderGroups(){...}
+function addPoint(){...}
+function spin(){...}
+function winner(){...}
+function clap(){...}
+function confetti(){...}
+function saveData(){...}
 
 renderGroups();
 
