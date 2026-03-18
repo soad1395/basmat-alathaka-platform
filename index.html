@@ -1,54 +1,45 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>بصمة الذكاء</title>
+<title>منصة بصمة الذكاء</title>
 
 <style>
 body{
 direction:rtl;
 font-family:tahoma;
+margin:0;
+color:white;
 text-align:center;
 background:#020617;
-color:white;
-overflow-x:hidden;
 }
 
 .box{
 background:#0f172a;
-margin:15px;
-padding:15px;
-border-radius:15px;
+margin:20px;
+padding:20px;
+border-radius:20px;
+box-shadow:0 0 20px #00eaff55;
+}
+
+input,select{
+padding:10px;
+border-radius:10px;
+border:none;
+margin:5px;
 }
 
 button{
-padding:10px;
-margin:5px;
-background:#00eaff;
+padding:10px 15px;
 border:none;
 border-radius:10px;
+background:#00eaff;
 cursor:pointer;
 }
 
-/* روبوت */
-#robot{
-position:fixed;
-bottom:20px;
-left:20px;
-font-size:60px;
-}
-
-/* قصاصات */
-.confetti{
-position:fixed;
-width:8px;
-height:8px;
-top:-10px;
-animation:fall 3s linear;
-}
-
-@keyframes fall{
-to{transform:translateY(100vh);}
+#winner{
+font-size:25px;
+color:#00ffcc;
 }
 </style>
 </head>
@@ -58,6 +49,15 @@ to{transform:translateY(100vh);}
 <h1>🤖 منصة بصمة الذكاء</h1>
 
 <button onclick="startSound()">🔊 تشغيل الصوت</button>
+
+<!-- البيانات -->
+<div class="box">
+<h3>البيانات الأساسية</h3>
+<input placeholder="اسم المدرسة">
+<input placeholder="اسم المعلمة">
+<input placeholder="المادة">
+<input placeholder="الصف">
+</div>
 
 <!-- الفصول -->
 <div class="box">
@@ -75,59 +75,71 @@ to{transform:translateY(100vh);}
 <div id="groups"></div>
 </div>
 
+<!-- السؤال -->
+<div class="box">
+<h3>السؤال</h3>
+<input id="q"><br>
+
+<input id="a1">
+<input id="a2">
+<input id="a3">
+<input id="a4"><br>
+
+<select id="correct">
+<option value="0">1</option>
+<option value="1">2</option>
+<option value="2">3</option>
+<option value="3">4</option>
+</select>
+
+<button onclick="showQ()">عرض</button>
+<div id="answers"></div>
+</div>
+
 <button onclick="showWinner()">🏆 إعلان الفائز</button>
 <div id="winner"></div>
 
-<div id="robot">🤖</div>
+<div style="position:fixed;bottom:20px;left:20px;font-size:50px;">🤖</div>
 
-<!-- أصوات -->
-<audio id="clapSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
+<audio id="clap" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
 
 <script>
 
-/* بيانات */
 let classes = JSON.parse(localStorage.getItem("classes")) || [];
 let groups = JSON.parse(localStorage.getItem("groups")) || [];
 let currentClass = localStorage.getItem("currentClass") || "";
 
 /* حفظ */
 function save(){
-localStorage.setItem("classes", JSON.stringify(classes));
-localStorage.setItem("groups", JSON.stringify(groups));
-localStorage.setItem("currentClass", currentClass);
+localStorage.setItem("classes",JSON.stringify(classes));
+localStorage.setItem("groups",JSON.stringify(groups));
+localStorage.setItem("currentClass",currentClass);
 render();
 }
 
 /* عرض */
 function render(){
 
-let cDiv = document.getElementById("classes");
-cDiv.innerHTML="";
+classesDiv.innerHTML="";
 classes.forEach((c,i)=>{
 let d=document.createElement("div");
-d.innerHTML = (c===currentClass?"👉 ":"")+c+" ❌";
+d.innerHTML=(c===currentClass?"👉 ":"")+c+" ❌";
 
-d.onclick=()=>{
-currentClass=c;
-save();
-};
-
+d.onclick=()=>{currentClass=c;save();}
 d.ondblclick=()=>{
 classes.splice(i,1);
-groups = groups.filter(g=>g.class!==c);
+groups=groups.filter(g=>g.class!==c);
 save();
 };
 
-cDiv.appendChild(d);
+classesDiv.appendChild(d);
 });
 
-let gDiv = document.getElementById("groups");
-gDiv.innerHTML="";
-
+groupsDiv.innerHTML="";
 groups.filter(g=>g.class===currentClass).forEach((g,i)=>{
 
 let d=document.createElement("div");
-d.innerHTML = g.name+" ⭐ "+g.score+" ❌";
+d.innerHTML=g.name+" ⭐ "+g.score+" ❌";
 
 d.onclick=()=>{
 groups.splice(groups.indexOf(g),1);
@@ -139,77 +151,79 @@ g.score++;
 save();
 };
 
-gDiv.appendChild(d);
+groupsDiv.appendChild(d);
 });
 }
 
-/* إضافة فصل */
+/* إضافة */
 function addClass(){
-let v = classInput.value;
-if(!v) return;
+let v=classInput.value;
+if(!v)return;
 classes.push(v);
-if(!currentClass) currentClass=v;
+if(!currentClass)currentClass=v;
 save();
 }
 
-/* إضافة مجموعة */
 function addGroup(){
-if(!currentClass){
-alert("اختاري فصل أول");
-return;
-}
-let v = groupInput.value;
-if(!v) return;
-
-groups.push({
-name:v,
-score:0,
-class:currentClass
-});
+if(!currentClass){alert("اختاري فصل");return;}
+let v=groupInput.value;
+if(!v)return;
+groups.push({name:v,score:0,class:currentClass});
 save();
 }
 
-/* صوت روبوت */
-function speak(text){
-let msg=new SpeechSynthesisUtterance(text);
-msg.lang="ar-SA";
-speechSynthesis.speak(msg);
+/* سؤال */
+function showQ(){
+answers.innerHTML="";
+let correctIndex=correct.value;
+
+[a1.value,a2.value,a3.value,a4.value].forEach((a,i)=>{
+let b=document.createElement("button");
+b.innerText=a;
+
+b.onclick=()=>{
+if(i==correctIndex){
+b.style.background="green";
+}else{
+b.style.background="red";
+}
+};
+
+answers.appendChild(b);
+});
 }
 
-/* تشغيل صوت */
-function startSound(){
-speak("مرحباً بكم في منصة بصمة الذكاء");
-}
-
-/* الفائز */
+/* فائز */
 function showWinner(){
+let gs=groups.filter(g=>g.class===currentClass);
+if(gs.length===0)return;
 
-let classGroups = groups.filter(g=>g.class===currentClass);
+let win=gs.reduce((a,b)=>a.score>b.score?a:b);
 
-if(classGroups.length===0){
-alert("لا يوجد مجموعات");
-return;
-}
-
-let win = classGroups.reduce((a,b)=>a.score>b.score?a:b);
-
-document.getElementById("winner").innerHTML =
-"🏆 الفائز: "+win.name;
+winner.innerHTML="🏆 "+win.name;
 
 /* صوت */
-document.getElementById("clapSound").play();
-speak("الفريق الفائز هو "+win.name);
+clap.play();
 
 /* قصاصات */
-for(let i=0;i<40;i++){
+for(let i=0;i<30;i++){
 let c=document.createElement("div");
-c.className="confetti";
-c.style.left=Math.random()*100+"%";
+c.style.position="fixed";
+c.style.width="8px";
+c.style.height="8px";
 c.style.background="hsl("+Math.random()*360+",100%,50%)";
+c.style.left=Math.random()*100+"%";
+c.style.top="-10px";
+c.style.animation="fall 3s linear";
 document.body.appendChild(c);
-setTimeout(()=>c.remove(),3000);
+}
 }
 
+/* صوت */
+function startSound(){
+let msg=new SpeechSynthesisUtterance("مرحباً بكم في المنصة");
+msg.lang="ar-SA";
+speechSynthesis.speak(msg);
 }
 
 render();
