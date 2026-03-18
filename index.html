@@ -102,3 +102,55 @@ let msg = new SpeechSynthesisUtterance("الفائز هو " + win);
 msg.lang="ar-SA";
 speechSynthesis.speak(msg);
 }
+// ===== عرض المجموعات =====
+function show(){
+let container = document.getElementById("groups");
+container.innerHTML = "";
+
+if(!data[currentClass]) return;
+
+for(let g in data[currentClass]){
+container.innerHTML += `
+<div class="box">
+<h3>${g}</h3>
+<p>النقاط: ${data[currentClass][g]}</p>
+<button onclick="addPoint('${g}')">+1</button>
+</div>
+`;
+}
+}
+
+// ===== إضافة نقطة =====
+function addPoint(group){
+data[currentClass][group]++;
+
+save();
+show();
+
+// صوت
+new Audio("https://www.soundjay.com/buttons/button-3.mp3").play();
+
+// روبوت
+let msg = new SpeechSynthesisUtterance("أحسنت");
+msg.lang="ar-SA";
+speechSynthesis.speak(msg);
+}
+
+// ===== إعلان الفائز =====
+function winner(){
+let max = -1;
+let win = "";
+
+for(let g in data[currentClass]){
+if(data[currentClass][g] > max){
+max = data[currentClass][g];
+win = g;
+}
+}
+
+document.getElementById("result").innerHTML =
+"🏆 الفائز: " + win;
+
+// تصفيق
+new Audio("https://www.soundjay.com/human/applause-8.mp3").play();
+}
