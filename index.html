@@ -11,9 +11,10 @@ font-family:tahoma;
 color:white;
 text-align:center;
 overflow-y:auto;
+background:black;
 }
 
-/* فيديو كامل */
+/* فيديو */
 #bg{
 position:fixed;
 top:0;
@@ -47,7 +48,7 @@ cursor:pointer;
 width:110px;
 height:110px;
 border-radius:50%;
-background:#ff3b3b;
+background:#888;
 display:inline-flex;
 align-items:center;
 justify-content:center;
@@ -56,10 +57,9 @@ cursor:pointer;
 font-size:18px;
 }
 
-.correct{background:#2ecc71;}
-.wrong{background:#ff3b3b;}
+.correct{background:green;}
+.wrong{background:red;}
 
-/* روبوت */
 #robot{
 position:fixed;
 bottom:10px;
@@ -86,15 +86,14 @@ display:none;
 </video>
 
 <h1>🤖 منصة بصمة الذكاء</h1>
-
 <div id="robot">🤖✨</div>
 
-<!-- فيديو -->
+<!-- تغيير فيديو -->
 <div class="box">
 <input type="file" accept="video/*" onchange="setVideo(event)">
 </div>
 
-<!-- بيانات -->
+<!-- البيانات -->
 <div class="box">
 <h2>البيانات</h2>
 <input id="t" placeholder="المعلمة">
@@ -120,12 +119,16 @@ display:none;
 <select id="groupSelect"></select>
 
 <div id="groups"></div>
+
+<h3 id="selectedGroup">لم يتم الاختيار</h3>
+<button onclick="spinWheel()">🎡 تدوير العجلة</button>
+
 </div>
 
 <!-- السؤال -->
 <div class="box">
 <h2>السؤال</h2>
-<input id="q" placeholder="السؤال"><br>
+<input id="q"><br>
 <input id="a1"><input id="a2"><br>
 <input id="a3"><input id="a4"><br>
 
@@ -148,25 +151,21 @@ display:none;
 let data = JSON.parse(localStorage.getItem("AI")) || {};
 let currentClass="";
 
-/* صوت */
 function speak(t){
 let msg=new SpeechSynthesisUtterance(t);
 msg.lang="ar-SA";
 speechSynthesis.speak(msg);
 }
 
-/* بداية */
 function start(){
 speak("أهلاً بكم");
 renderClasses();
 }
 
-/* فيديو */
 function setVideo(e){
 bg.src=URL.createObjectURL(e.target.files[0]);
 }
 
-/* فصول */
 function addClass(){
 let c=classInput.value;
 if(!c) return;
@@ -177,39 +176,32 @@ renderClasses();
 renderGroups();
 }
 
-/* عرض الفصول */
 function renderClasses(){
 classList.innerHTML="";
 for(let c in data){
 classList.innerHTML+=`
-<div>
-${c}
+<div>${c}
 <button onclick="selectClass('${c}')">اختيار</button>
 </div>`;
 }
 }
 
-/* اختيار فصل */
 function selectClass(c){
 currentClass=c;
 renderGroups();
 }
 
-/* مجموعات */
 function addGroup(){
 let g=groupInput.value;
 if(!currentClass) return alert("اختاري فصل");
 if(!g) return;
 
-if(!data[currentClass][g]){
-data[currentClass][g]=0;
-}
+data[currentClass][g]=data[currentClass][g]||0;
 
 save();
 renderGroups();
 }
 
-/* عرض مجموعات */
 function renderGroups(){
 groups.innerHTML="";
 groupSelect.innerHTML="";
@@ -217,11 +209,29 @@ groupSelect.innerHTML="";
 if(!currentClass) return;
 
 for(let g in data[currentClass]){
-groups.innerHTML+=`
-<div>${g} ⭐ ${data[currentClass][g]}</div>`;
-
+groups.innerHTML+=`${g} ⭐ ${data[currentClass][g]}<br>`;
 groupSelect.innerHTML+=`<option>${g}</option>`;
 }
+}
+
+/* عجلة */
+function spinWheel(){
+let groupsArr = Object.keys(data[currentClass]);
+if(groupsArr.length==0) return;
+
+let i=0;
+let interval=setInterval(()=>{
+selectedGroup.innerText=groupsArr[i%groupsArr.length];
+i++;
+},100);
+
+setTimeout(()=>{
+clearInterval(interval);
+let chosen=groupsArr[Math.floor(Math.random()*groupsArr.length)];
+selectedGroup.innerText="🎯 "+chosen;
+groupSelect.value=chosen;
+speak("المجموعة المختارة "+chosen);
+},2000);
 }
 
 /* سؤال */
@@ -235,21 +245,19 @@ answers.forEach((ans,i)=>{
 qBox.innerHTML+=`
 <div class="circle" onclick="checkAnswer(${i},${c})">${ans}</div>`;
 });
-
-speak(q.value);
 }
 
 /* تحقق */
 function checkAnswer(i,c){
 let circles=document.querySelectorAll(".circle");
-let group=groupSelect.value;
+let g=groupSelect.value;
 
-if(!group) return alert("اختاري مجموعة");
+if(!g) return alert("اختاري مجموعة");
 
 if(i==c){
 circles[i].classList.add("correct");
-data[currentClass][group]++;
-speak("إجابة صحيحة");
+data[currentClass][g]++;
+speak("صحيح");
 }else{
 circles[i].classList.add("wrong");
 speak("خطأ");
@@ -261,9 +269,7 @@ renderGroups();
 
 /* فائز */
 function winner(){
-let max=-1;
-let name="";
-
+let max=-1,name="";
 for(let g in data[currentClass]){
 if(data[currentClass][g]>max){
 max=data[currentClass][g];
@@ -276,7 +282,6 @@ win.style.display="block";
 speak("الفائز هو "+name);
 }
 
-/* حفظ */
 function save(){
 localStorage.setItem("AI",JSON.stringify(data));
 }
